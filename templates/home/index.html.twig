@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Home - Survey Application{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="jumbotron bg-primary text-white p-4 rounded">
+            <h1 class="display-4">Welcome to Survey Application</h1>
+            <p class="lead">This is a Symfony application with Bootstrap and Stimulus integration.</p>
+            <hr class="my-4">
+            <p>The application includes:</p>
+            <ul>
+                <li>✅ Symfony 7.3 Framework</li>
+                <li>✅ Web Profiler for debugging</li>
+                <li>✅ Twig templating engine</li>
+                <li>✅ Bootstrap 5 for responsive UI</li>
+                <li>✅ Stimulus for interactive JavaScript</li>
+                <li>✅ Webpack Encore for asset management</li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Test Stimulus Controller</h5>
+            </div>
+            <div class="card-body" data-controller="hello">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Your Name:</label>
+                    <input type="text" id="name" class="form-control" data-hello-target="name" placeholder="Enter your name">
+                </div>
+                <button type="button" class="btn btn-primary" data-action="click->hello#greet">Say Hello</button>
+                <div class="mt-3">
+                    <div data-hello-target="output" class="alert alert-success" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Bootstrap Components Test</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="alert alert-info" role="alert">
+                            <h6 class="alert-heading">Information</h6>
+                            This is a Bootstrap alert component.
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary">Button 1</button>
+                            <button type="button" class="btn btn-outline-primary">Button 2</button>
+                            <button type="button" class="btn btn-outline-primary">Button 3</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Development Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Environment:</strong> {{ app.environment }}</p>
+                <p><strong>Debug Mode:</strong> {{ app.debug ? 'Enabled' : 'Disabled' }}</p>
+                <p><strong>Controller:</strong> {{ controller_name }}</p>
+                {% if app.debug %}
+                    <div class="alert alert-warning">
+                        <strong>Web Profiler:</strong> Check the bottom of the page for the profiler toolbar.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
