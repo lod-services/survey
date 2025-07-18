@@ -1,0 +1,11 @@
+parameters:
+    level: 5
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - var/
+        - vendor/
+    symfony:
+        container_xml_path: var/cache/dev/App_KernelDevDebugContainer.xml
+    checkMissingIterableValueType: false
