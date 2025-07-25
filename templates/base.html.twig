@@ -26,6 +26,20 @@
                             <a class="nav-link" href="/">Home</a>
                         </li>
                     </ul>
+                    <ul class="navbar-nav ms-auto">
+                        {% if app.user %}
+                            <li class="nav-item">
+                                <span class="navbar-text">Welcome, {{ app.user.username }}!</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('app_logout') }}">Logout</a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('app_login') }}">Login</a>
+                            </li>
+                        {% endif %}
+                    </ul>
                 </div>
             </div>
         </nav>
