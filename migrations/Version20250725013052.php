@@ -31,6 +31,7 @@ final class Version20250725013052 extends AbstractMigration
             is_active TINYINT(1) NOT NULL, 
             UNIQUE INDEX UNIQ_1483A5E9F85E0677 (username), 
             UNIQUE INDEX UNIQ_1483A5E9E7927C74 (email), 
+            INDEX IDX_1483A5E9C0563BB5 (is_active), 
             PRIMARY KEY(id)
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
     }
