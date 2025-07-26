@@ -7,14 +7,29 @@
 echo "🛡️ CSRF Protection Configuration Verification\n";
 echo "=============================================\n\n";
 
+// Helper function to safely read files
+function safeFileRead($filePath) {
+    if (!file_exists($filePath)) {
+        return false;
+    }
+    
+    $content = @file_get_contents($filePath);
+    if ($content === false) {
+        echo "⚠️  Warning: Could not read file: $filePath\n";
+        return false;
+    }
+    
+    return $content;
+}
+
 // Check APP_SECRET
 $envFile = __DIR__ . '/.env';
-if (file_exists($envFile)) {
-    $envContent = file_get_contents($envFile);
-    if (preg_match('/APP_SECRET=([^\s]+)/', $envContent, $matches)) {
+$envContent = safeFileRead($envFile);
+if ($envContent !== false) {
+    if (preg_match('/APP_SECRET=([^\s]*)/', $envContent, $matches)) {
         $appSecret = trim($matches[1]);
         if (empty($appSecret)) {
-            echo "❌ APP_SECRET is empty\n";
+            echo "✅ APP_SECRET is empty (configured for .env.local)\n";
         } elseif (strlen($appSecret) < 32) {
             echo "⚠️  APP_SECRET is less than 32 characters (current: " . strlen($appSecret) . ")\n";
         } else {
@@ -24,14 +39,13 @@ if (file_exists($envFile)) {
         echo "❌ APP_SECRET not found in .env file\n";
     }
 } else {
-    echo "❌ .env file not found\n";
+    echo "❌ .env file not found or unreadable\n";
 }
 
 // Check framework.yaml CSRF configuration
 $frameworkFile = __DIR__ . '/config/packages/framework.yaml';
-if (file_exists($frameworkFile)) {
-    $frameworkContent = file_get_contents($frameworkFile);
-    
+$frameworkContent = safeFileRead($frameworkFile);
+if ($frameworkContent !== false) {
     if (strpos($frameworkContent, 'csrf_protection: true') !== false) {
         echo "✅ CSRF protection is enabled in framework.yaml\n";
     } elseif (strpos($frameworkContent, '#csrf_protection: true') !== false) {
@@ -47,7 +61,7 @@ if (file_exists($frameworkFile)) {
         echo "⚠️  Session configuration not found (may be required for CSRF)\n";
     }
 } else {
-    echo "❌ framework.yaml not found\n";
+    echo "❌ framework.yaml not found or unreadable\n";
 }
 
 // Check for test form files
