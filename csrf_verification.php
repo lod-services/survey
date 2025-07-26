@@ -2,49 +2,63 @@
 /**
  * CSRF Protection Verification Script
  * This script validates that CSRF protection is properly configured
+ * Performance optimized with caching and error handling
  */
 
 echo "🛡️ CSRF Protection Configuration Verification\n";
 echo "=============================================\n\n";
 
-// Helper function to safely read files
-function safeFileRead($filePath) {
-    if (!file_exists($filePath)) {
+// Simple cache to avoid repeated file operations
+static $fileCache = [];
+
+function getCachedFileContent($filename) {
+    global $fileCache;
+    
+    if (isset($fileCache[$filename])) {
+        return $fileCache[$filename];
+    }
+    
+    if (!file_exists($filename)) {
         return false;
     }
     
-    $content = @file_get_contents($filePath);
+    $content = @file_get_contents($filename);
     if ($content === false) {
-        echo "⚠️  Warning: Could not read file: $filePath\n";
+        echo "⚠️  Warning: Could not read file $filename\n";
         return false;
     }
     
+    $fileCache[$filename] = $content;
     return $content;
 }
 
-// Check APP_SECRET
-$envFile = __DIR__ . '/.env';
-$envContent = safeFileRead($envFile);
-if ($envContent !== false) {
-    if (preg_match('/APP_SECRET=([^\s]*)/', $envContent, $matches)) {
+// Check APP_SECRET (check both .env and .env.local)
+$envFiles = [__DIR__ . '/.env.local', __DIR__ . '/.env'];
+$appSecretFound = false;
+
+foreach ($envFiles as $envFile) {
+    $envContent = getCachedFileContent($envFile);
+    if ($envContent !== false && preg_match('/APP_SECRET=([^\s]+)/', $envContent, $matches)) {
         $appSecret = trim($matches[1]);
-        if (empty($appSecret)) {
-            echo "✅ APP_SECRET is empty (configured for .env.local)\n";
-        } elseif (strlen($appSecret) < 32) {
-            echo "⚠️  APP_SECRET is less than 32 characters (current: " . strlen($appSecret) . ")\n";
-        } else {
-            echo "✅ APP_SECRET is properly configured (length: " . strlen($appSecret) . ")\n";
+        if (!empty($appSecret)) {
+            if (strlen($appSecret) < 32) {
+                echo "⚠️  APP_SECRET is less than 32 characters (current: " . strlen($appSecret) . ")\n";
+            } else {
+                echo "✅ APP_SECRET is properly configured (length: " . strlen($appSecret) . ")\n";
+            }
+            $appSecretFound = true;
+            break;
         }
-    } else {
-        echo "❌ APP_SECRET not found in .env file\n";
     }
-} else {
-    echo "❌ .env file not found or unreadable\n";
+}
+
+if (!$appSecretFound) {
+    echo "❌ APP_SECRET not found or empty in .env files\n";
 }
 
 // Check framework.yaml CSRF configuration
 $frameworkFile = __DIR__ . '/config/packages/framework.yaml';
-$frameworkContent = safeFileRead($frameworkFile);
+$frameworkContent = getCachedFileContent($frameworkFile);
 if ($frameworkContent !== false) {
     if (strpos($frameworkContent, 'csrf_protection: true') !== false) {
         echo "✅ CSRF protection is enabled in framework.yaml\n";

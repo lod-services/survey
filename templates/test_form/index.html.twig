@@ -64,13 +64,10 @@
         </div>
     </div>
 
-    <div class="mt-4">
-        <h3>🔍 CSRF Token Information</h3>
-        <div class="alert alert-secondary">
-            {# CSRF token display removed for security - tokens are automatically embedded in forms #}
-            <p><small>CSRF tokens are automatically embedded in Symfony forms when CSRF protection is enabled.</small></p>
-        </div>
-    </div>
+    {% comment %}
+    CSRF Token display removed for security reasons - tokens should not be exposed in production.
+    CSRF tokens are automatically embedded in Symfony forms when protection is enabled.
+    {% endcomment %}
 
     <h3>🧪 Testing Instructions</h3>
     <div class="alert alert-warning">

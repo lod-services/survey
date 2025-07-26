@@ -40,17 +40,30 @@ class TestFormController extends AbstractController
         $submitResult = null;
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
+                // Sanitize and validate data before processing
                 $data = $form->getData();
+                $sanitizedData = [
+                    'name' => htmlspecialchars($data['name'] ?? '', ENT_QUOTES, 'UTF-8'),
+                    'email' => filter_var($data['email'] ?? '', FILTER_SANITIZE_EMAIL),
+                    'message' => htmlspecialchars($data['message'] ?? '', ENT_QUOTES, 'UTF-8'),
+                ];
+                
                 $submitResult = [
                     'status' => 'success',
                     'message' => 'Form submitted successfully with valid CSRF token!',
-                    'data' => $data
+                    'data' => $sanitizedData
                 ];
             } else {
+                // Don't expose detailed error messages to users for security
                 $submitResult = [
                     'status' => 'error',
-                    'message' => 'Form validation failed. Please check your input.',
+                    'message' => 'Form validation failed. Please check your input and try again.',
                 ];
+                
+                // Log detailed errors for debugging (in production, use proper logging)
+                if ($this->getParameter('kernel.environment') === 'dev') {
+                    $submitResult['debug_errors'] = (string)$form->getErrors(true);
+                }
             }
         }
 
