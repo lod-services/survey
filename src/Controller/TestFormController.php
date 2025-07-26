@@ -49,7 +49,7 @@ class TestFormController extends AbstractController
             } else {
                 $submitResult = [
                     'status' => 'error',
-                    'message' => 'Form submission failed. Errors: ' . (string)$form->getErrors(true),
+                    'message' => 'Form validation failed. Please check your input.',
                 ];
             }
         }
