@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}CSRF Protection Test Form{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>🛡️ CSRF Protection Test Form</h1>
+    
+    <div class="alert alert-info">
+        <h5>Purpose:</h5>
+        <p>This form tests that CSRF protection is working correctly in the Symfony application.</p>
+        <ul>
+            <li>✅ Forms should automatically include CSRF tokens</li>
+            <li>✅ Valid submissions should succeed</li>
+            <li>❌ Invalid/missing CSRF tokens should be rejected</li>
+        </ul>
+    </div>
+
+    {% if submitResult %}
+        {% if submitResult.status == 'success' %}
+            <div class="alert alert-success">
+                <h5>✅ Success!</h5>
+                <p>{{ submitResult.message }}</p>
+                {% if submitResult.data %}
+                    <p><strong>Submitted data:</strong></p>
+                    <ul>
+                        <li><strong>Name:</strong> {{ submitResult.data.name }}</li>
+                        <li><strong>Email:</strong> {{ submitResult.data.email }}</li>
+                        <li><strong>Message:</strong> {{ submitResult.data.message }}</li>
+                    </ul>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="alert alert-danger">
+                <h5>❌ Error!</h5>
+                <p>{{ submitResult.message }}</p>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            {{ form_start(form) }}
+                <div class="mb-3">
+                    {{ form_label(form.name) }}
+                    {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.name) }}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form_label(form.email) }}
+                    {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.email) }}
+                </div>
+                
+                <div class="mb-3">
+                    {{ form_label(form.message) }}
+                    {{ form_widget(form.message, {'attr': {'class': 'form-control', 'rows': 4}}) }}
+                    {{ form_errors(form.message) }}
+                </div>
+                
+                {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+    {% comment %}
+    CSRF Token display removed for security reasons - tokens should not be exposed in production.
+    CSRF tokens are automatically embedded in Symfony forms when protection is enabled.
+    {% endcomment %}
+
+    <h3>🧪 Testing Instructions</h3>
+    <div class="alert alert-warning">
+        <p><strong>To test CSRF validation manually:</strong></p>
+        <ol>
+            <li>Submit the form normally (should succeed)</li>
+            <li>Use browser dev tools to modify the CSRF token value in the form</li>
+            <li>Submit with invalid token (should fail with "The CSRF token is invalid" error)</li>
+            <li>Use curl commands to test without tokens</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
