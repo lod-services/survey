@@ -11,6 +11,10 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\Email;
+use Symfony\Component\Validator\Constraints\Regex;
 
 class TestFormController extends AbstractController
 {
@@ -21,14 +25,30 @@ class TestFormController extends AbstractController
             ->add('name', TextType::class, [
                 'label' => 'Name',
                 'required' => true,
+                'constraints' => [
+                    new NotBlank(),
+                    new Length(['min' => 2, 'max' => 100]),
+                    new Regex([
+                        'pattern' => '/^[\p{L}\p{M}\s\'-\.]+$/u',
+                        'message' => 'Name may only contain letters, spaces, hyphens, apostrophes, and periods'
+                    ])
+                ],
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Email',
                 'required' => true,
+                'constraints' => [
+                    new NotBlank(),
+                    new Email(['mode' => Email::VALIDATION_MODE_STRICT])
+                ],
             ])
             ->add('message', TextareaType::class, [
                 'label' => 'Message',
                 'required' => true,
+                'constraints' => [
+                    new NotBlank(),
+                    new Length(['min' => 10, 'max' => 1000])
+                ],
             ])
             ->add('submit', SubmitType::class, [
                 'label' => 'Submit Test Form',
@@ -40,18 +60,13 @@ class TestFormController extends AbstractController
         $submitResult = null;
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
-                // Sanitize and validate data before processing
+                // Use validated data directly - no manual sanitization needed
                 $data = $form->getData();
-                $sanitizedData = [
-                    'name' => htmlspecialchars($data['name'] ?? '', ENT_QUOTES, 'UTF-8'),
-                    'email' => filter_var($data['email'] ?? '', FILTER_SANITIZE_EMAIL),
-                    'message' => htmlspecialchars($data['message'] ?? '', ENT_QUOTES, 'UTF-8'),
-                ];
                 
                 $submitResult = [
                     'status' => 'success',
                     'message' => 'Form submitted successfully with valid CSRF token!',
-                    'data' => $sanitizedData
+                    'data' => $data
                 ];
             } else {
                 // Don't expose detailed error messages to users for security
