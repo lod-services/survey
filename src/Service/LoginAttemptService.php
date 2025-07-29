@@ -87,16 +87,12 @@ class LoginAttemptService
 
     private function getClientIp(Request $request): string
     {
-        $ipKeys = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR'];
+        // Use Symfony's built-in method which handles trusted proxies properly
+        // Configure trusted proxies in config/packages/framework.yaml for production
+        $clientIp = $request->getClientIp();
         
-        foreach ($ipKeys as $key) {
-            if ($request->server->has($key) && !empty($request->server->get($key))) {
-                $ips = explode(',', $request->server->get($key));
-                return trim($ips[0]);
-            }
-        }
-        
-        return $request->getClientIp() ?? '127.0.0.1';
+        // Fallback to prevent null values
+        return $clientIp ?? '127.0.0.1';
     }
 
     public function getRemainingAttempts(Request $request, ?string $username = null): int

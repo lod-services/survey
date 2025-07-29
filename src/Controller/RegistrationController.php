@@ -40,47 +40,43 @@ class RegistrationController extends AbstractController
                 $error = 'All fields are required.';
             } elseif ($password !== $confirmPassword) {
                 $error = 'Passwords do not match.';
-            } elseif (strlen($password) < 8) {
-                $error = 'Password must be at least 8 characters long.';
+            } elseif (!$this->isPasswordStrong($password)) {
+                $error = 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.';
             } else {
                 $user->setUsername($username);
                 $user->setEmail($email);
                 
                 // Check if username or email already exists
-                $existingUser = $entityManager->getRepository(User::class)->findOneBy([
+                $existingUserByUsername = $entityManager->getRepository(User::class)->findOneBy([
                     'username' => $username
                 ]);
                 
-                if ($existingUser) {
-                    $error = 'Username already exists.';
+                $existingUserByEmail = $entityManager->getRepository(User::class)->findOneBy([
+                    'email' => $email
+                ]);
+                
+                if ($existingUserByUsername || $existingUserByEmail) {
+                    $error = 'A user with these credentials already exists.';
                 } else {
-                    $existingUser = $entityManager->getRepository(User::class)->findOneBy([
-                        'email' => $email
-                    ]);
+                    // Validate the entity
+                    $violations = $validator->validate($user);
                     
-                    if ($existingUser) {
-                        $error = 'Email already exists.';
+                    if (count($violations) > 0) {
+                        $error = (string) $violations[0]->getMessage();
                     } else {
-                        // Validate the entity
-                        $violations = $validator->validate($user);
+                        // Hash the password and save the user
+                        $user->setPassword(
+                            $userPasswordHasher->hashPassword($user, $password)
+                        );
                         
-                        if (count($violations) > 0) {
-                            $error = (string) $violations[0]->getMessage();
-                        } else {
-                            // Hash the password and save the user
-                            $user->setPassword(
-                                $userPasswordHasher->hashPassword($user, $password)
-                            );
-                            
-                            $entityManager->persist($user);
-                            $entityManager->flush();
-                            
-                            // Log the registration
-                            $auditService->logRegistration($user, $request);
-                            
-                            $this->addFlash('success', 'Account created successfully! You can now log in.');
-                            return $this->redirectToRoute('app_login');
-                        }
+                        $entityManager->persist($user);
+                        $entityManager->flush();
+                        
+                        // Log the registration
+                        $auditService->logRegistration($user, $request);
+                        
+                        $this->addFlash('success', 'Account created successfully! You can now log in.');
+                        return $this->redirectToRoute('app_login');
                     }
                 }
             }
@@ -90,5 +86,35 @@ class RegistrationController extends AbstractController
             'error' => $error,
             'user' => $user,
         ]);
+    }
+
+    private function isPasswordStrong(string $password): bool
+    {
+        // At least 8 characters long
+        if (strlen($password) < 8) {
+            return false;
+        }
+
+        // Must contain at least one uppercase letter
+        if (!preg_match('/[A-Z]/', $password)) {
+            return false;
+        }
+
+        // Must contain at least one lowercase letter
+        if (!preg_match('/[a-z]/', $password)) {
+            return false;
+        }
+
+        // Must contain at least one number
+        if (!preg_match('/[0-9]/', $password)) {
+            return false;
+        }
+
+        // Must contain at least one special character
+        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+            return false;
+        }
+
+        return true;
     }
 }

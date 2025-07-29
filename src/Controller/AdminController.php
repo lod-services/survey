@@ -11,6 +11,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Csrf\CsrfToken;
 
 #[Route('/admin')]
 #[IsGranted('ROLE_ADMIN')]
@@ -19,7 +21,8 @@ class AdminController extends AbstractController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserRoleService $userRoleService,
-        private AuditService $auditService
+        private AuditService $auditService,
+        private CsrfTokenManagerInterface $csrfTokenManager
     ) {
     }
 
@@ -77,6 +80,13 @@ class AdminController extends AbstractController
     #[Route('/users/{id}/roles', name: 'admin_user_roles', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function updateUserRoles(User $user, Request $request): Response
     {
+        // Validate CSRF token
+        $token = new CsrfToken('update_user_roles', $request->request->get('_token'));
+        if (!$this->csrfTokenManager->isTokenValid($token)) {
+            $this->addFlash('error', 'Invalid security token. Please try again.');
+            return $this->redirectToRoute('admin_user_detail', ['id' => $user->getId()]);
+        }
+
         $currentUser = $this->getUser();
         
         // Prevent users from modifying their own roles
@@ -120,6 +130,13 @@ class AdminController extends AbstractController
     #[Route('/users/{id}/activate', name: 'admin_user_activate', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function activateUser(User $user, Request $request): Response
     {
+        // Validate CSRF token
+        $token = new CsrfToken('activate_user', $request->request->get('_token'));
+        if (!$this->csrfTokenManager->isTokenValid($token)) {
+            $this->addFlash('error', 'Invalid security token. Please try again.');
+            return $this->redirectToRoute('admin_user_detail', ['id' => $user->getId()]);
+        }
+
         $user->setIsActive(true);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
@@ -142,6 +159,13 @@ class AdminController extends AbstractController
     #[Route('/users/{id}/deactivate', name: 'admin_user_deactivate', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function deactivateUser(User $user, Request $request): Response
     {
+        // Validate CSRF token
+        $token = new CsrfToken('deactivate_user', $request->request->get('_token'));
+        if (!$this->csrfTokenManager->isTokenValid($token)) {
+            $this->addFlash('error', 'Invalid security token. Please try again.');
+            return $this->redirectToRoute('admin_user_detail', ['id' => $user->getId()]);
+        }
+
         $currentUser = $this->getUser();
         
         // Prevent deactivating own account
