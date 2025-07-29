@@ -15,7 +15,8 @@
         "symfony/security-bundle": "^7.3",
         "symfony/form": "^7.3",
         "symfony/validator": "^7.3",
-        "symfony/doctrine-bundle": "^2.0",
+        "symfony/password-hasher": "^7.3",
+        "doctrine/doctrine-bundle": "^2.0",
         "doctrine/doctrine-migrations-bundle": "^3.0",
         "doctrine/orm": "^2.0"
     },

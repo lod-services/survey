@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>🛡️ Admin Dashboard</h1>
+                <div>
+                    <a href="{{ path('app_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">{{ user_stats.total_users }}</h5>
+                            <p class="card-text">Total Users</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">{{ user_stats.active_users }}</h5>
+                            <p class="card-text">Active Users</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">{{ user_stats.verified_users }}</h5>
+                            <p class="card-text">Verified Users</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">{{ user_stats.survey_creators }}</h5>
+                            <p class="card-text">Survey Creators</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">{{ user_stats.admins }}</h5>
+                            <p class="card-text">Administrators</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>User Management</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Manage user accounts, roles, and permissions.</p>
+                            <a href="{{ path('admin_users') }}" class="btn btn-primary">Manage Users</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Security Monitoring</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Monitor login attempts and security events.</p>
+                            <a href="{{ path('admin_login_attempts') }}" class="btn btn-warning">View Login Attempts</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>System Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-success">
+                                <strong>✅ Authentication System Active:</strong> Users can register, login, and access role-based features.
+                            </div>
+                            <div class="alert alert-info">
+                                <strong>ℹ️ RBAC Enabled:</strong> Role-based access control is enforcing permissions across the application.
+                            </div>
+                            <div class="alert alert-warning">
+                                <strong>⚠️ Rate Limiting Active:</strong> Login attempts are being monitored and limited to prevent abuse.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

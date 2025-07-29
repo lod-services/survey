@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}User Management{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>👥 User Management</h1>
+                <div>
+                    <a href="{{ path('admin_dashboard') }}" class="btn btn-outline-secondary">Back to Admin</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5>Registered Users</h5>
+                </div>
+                <div class="card-body">
+                    {% if users %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Roles</th>
+                                        <th>Status</th>
+                                        <th>Registered</th>
+                                        <th>Last Login</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                        <tr>
+                                            <td>{{ user.id }}</td>
+                                            <td>{{ user.username }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>
+                                                {% for role in user.roles %}
+                                                    <span class="badge bg-secondary me-1">{{ role }}</span>
+                                                {% endfor %}
+                                            </td>
+                                            <td>
+                                                {% if user.isActive %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                {% endif %}
+                                                {% if user.isVerified %}
+                                                    <span class="badge bg-info">Verified</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user.createdAt|date('Y-m-d') }}</td>
+                                            <td>
+                                                {% if user.lastLogin %}
+                                                    {{ user.lastLogin|date('Y-m-d H:i') }}
+                                                {% else %}
+                                                    <em>Never</em>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ path('admin_user_detail', {'id': user.id}) }}" class="btn btn-sm btn-outline-primary">
+                                                    View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if total_pages > 1 %}
+                            <nav aria-label="User pagination">
+                                <ul class="pagination">
+                                    {% for page in 1..total_pages %}
+                                        <li class="page-item {% if page == current_page %}active{% endif %}">
+                                            <a class="page-link" href="{{ path('admin_users', {'page': page}) }}">{{ page }}</a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">No users found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
