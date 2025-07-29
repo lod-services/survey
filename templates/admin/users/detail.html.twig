@@ -78,6 +78,7 @@
                         </div>
                         <div class="card-body">
                             <form method="post" action="{{ path('admin_user_roles', {'id': user.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('update_user_roles') }}" />
                                 <div class="mb-3">
                                     <label class="form-label">Current Roles:</label>
                                     {% for role in user.roles %}
@@ -134,12 +135,14 @@
                             {% if app.user != user %}
                                 {% if user.isActive %}
                                     <form method="post" action="{{ path('admin_user_deactivate', {'id': user.id}) }}" class="d-inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('deactivate_user') }}" />
                                         <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to deactivate this user?')">
                                             Deactivate User
                                         </button>
                                     </form>
                                 {% else %}
                                     <form method="post" action="{{ path('admin_user_activate', {'id': user.id}) }}" class="d-inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('activate_user') }}" />
                                         <button type="submit" class="btn btn-success">
                                             Activate User
                                         </button>
