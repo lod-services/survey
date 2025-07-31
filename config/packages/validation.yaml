@@ -1,0 +1,31 @@
+framework:
+    validation:
+        enabled: true
+        email_validation_mode: html5
+        enable_attributes: true
+        mapping:
+            paths:
+                - '%kernel.project_dir%/src/Constraint'
+        
+        # Cache validation metadata
+        cache: 'cache.validation'
+        
+        # Translation domain for validation messages
+        translation_domain: 'validators'
+        
+        # Auto mapping for entities (when we add Doctrine entities)
+        auto_mapping:
+            App\Entity\: []
+
+# Security-focused validation settings
+when@dev:
+    framework:
+        validation:
+            # More verbose validation in development
+            not_compromised_password: true
+            
+when@prod:
+    framework:
+        validation:
+            # Stricter validation in production
+            not_compromised_password: true

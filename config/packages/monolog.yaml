@@ -1,0 +1,85 @@
+monolog:
+    channels:
+        - security
+        - validation
+        - performance
+
+when@dev:
+    monolog:
+        handlers:
+            main:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+                channels: ["!event"]
+                
+            security:
+                type: stream
+                path: "%kernel.logs_dir%/security.log"
+                level: info
+                channels: [security, validation]
+                formatter: monolog.formatter.json
+                
+            performance:
+                type: stream
+                path: "%kernel.logs_dir%/performance.log"
+                level: warning
+                channels: [performance]
+                
+            console:
+                type: console
+                process_psr_3_messages: false
+                channels: ["!event", "!doctrine", "!console"]
+
+when@prod:
+    monolog:
+        handlers:
+            main:
+                type: fingers_crossed
+                action_level: error
+                handler: nested
+                excluded_http_codes: [404, 405]
+                buffer_size: 50
+                
+            nested:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+                formatter: monolog.formatter.json
+                
+            security:
+                type: stream
+                path: "%kernel.logs_dir%/security.log"
+                level: info
+                channels: [security, validation]
+                formatter: monolog.formatter.json
+                max_files: 30
+                
+            performance:
+                type: stream  
+                path: "%kernel.logs_dir%/performance.log"
+                level: warning
+                channels: [performance]
+                max_files: 7
+                
+            # Optional: Send critical security events to external service
+            # security_critical:
+            #     type: slack
+            #     token: "%env(SLACK_TOKEN)%"
+            #     channel: "#security-alerts"
+            #     level: critical
+            #     channels: [security]
+
+when@test:
+    monolog:
+        handlers:
+            main:
+                type: stream
+                path: "%kernel.logs_dir%/test.log"
+                level: debug
+                
+            security:
+                type: stream
+                path: "%kernel.logs_dir%/test_security.log" 
+                level: info
+                channels: [security, validation]
