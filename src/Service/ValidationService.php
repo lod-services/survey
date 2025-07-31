@@ -6,6 +6,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -29,7 +30,8 @@ class ValidationService
         private ValidatorInterface $validator,
         private ValidationCircuitBreaker $circuitBreaker,
         private AdapterInterface $cache,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private RequestStack $requestStack
     ) {
     }
     
@@ -153,22 +155,132 @@ class ValidationService
     {
         $this->logger->info('Using fallback validation due to circuit breaker');
         
-        // Basic sanitization fallback
-        if (is_array($data)) {
-            $sanitized = [];
-            foreach ($data as $key => $value) {
-                $sanitized[$key] = $this->sanitize($value, $this->guessFieldType($key));
-            }
-        } else {
-            $sanitized = $this->sanitize($data);
-        }
+        // Enhanced security checks even in fallback mode
+        $errors = [];
         
-        // Basic length validation
+        // Critical security validation that must always run
         if ($this->isLikelyDoSAttempt($data)) {
+            $this->logSecurityViolation('dos_attempt_fallback', $data);
             return $this->createErrorResponse('Input exceeds basic size limits', $data);
         }
         
+        // Check for obvious malicious patterns
+        $securityErrors = $this->performCriticalSecurityChecks($data);
+        if (!empty($securityErrors)) {
+            $this->logSecurityViolation('critical_security_fallback', $data);
+            return $this->createErrorResponse($securityErrors, $data);
+        }
+        
+        // Sanitization with enhanced safety
+        if (is_array($data)) {
+            $sanitized = [];
+            foreach ($data as $key => $value) {
+                $fieldType = $this->guessFieldType($key);
+                $sanitizedValue = $this->sanitize($value, $fieldType);
+                
+                // Double-check sanitized value for safety
+                if ($this->isStillDangerous($sanitizedValue)) {
+                    $errors[] = "Field '$key' contains potentially dangerous content even after sanitization";
+                    continue;
+                }
+                
+                $sanitized[$key] = $sanitizedValue;
+            }
+        } else {
+            $sanitized = $this->sanitize($data);
+            if ($this->isStillDangerous($sanitized)) {
+                return $this->createErrorResponse('Data contains potentially dangerous content', $data);
+            }
+        }
+        
+        if (!empty($errors)) {
+            return $this->createErrorResponse($errors, $data);
+        }
+        
         return $this->createSuccessResponse($sanitized);
+    }
+    
+    private function performCriticalSecurityChecks($data): array
+    {
+        $errors = [];
+        
+        if (is_array($data)) {
+            array_walk_recursive($data, function($value) use (&$errors) {
+                if (is_string($value)) {
+                    $securityCheck = $this->checkForCriticalThreats($value);
+                    if ($securityCheck) {
+                        $errors[] = $securityCheck;
+                    }
+                }
+            });
+        } else if (is_string($data)) {
+            $securityCheck = $this->checkForCriticalThreats($data);
+            if ($securityCheck) {
+                $errors[] = $securityCheck;
+            }
+        }
+        
+        return $errors;
+    }
+    
+    private function checkForCriticalThreats(string $value): ?string
+    {
+        // Critical XSS patterns that must be blocked even in fallback
+        $criticalXssPatterns = [
+            '/<script[^>]*>/i',
+            '/javascript:/i',
+            '/onload\s*=/i',
+            '/onerror\s*=/i',
+            '/onclick\s*=/i',
+            '/<iframe[^>]*>/i',
+            '/<object[^>]*>/i',
+            '/<embed[^>]*>/i'
+        ];
+        
+        foreach ($criticalXssPatterns as $pattern) {
+            if (preg_match($pattern, $value)) {
+                return 'Critical XSS pattern detected';
+            }
+        }
+        
+        // Critical SQL injection patterns
+        $criticalSqlPatterns = [
+            '/(\bunion\s+select)/i',
+            '/(\bdrop\s+table)/i',
+            '/(\bdelete\s+from)/i',
+            '/(\binsert\s+into)/i',
+            '/(\bupdate\s+.+\bset)/i',
+            '/(\b(exec|execute)\s*\()/i'
+        ];
+        
+        foreach ($criticalSqlPatterns as $pattern) {
+            if (preg_match($pattern, $value)) {
+                return 'Critical SQL injection pattern detected';
+            }
+        }
+        
+        return null;
+    }
+    
+    private function isStillDangerous(string $value): bool
+    {
+        // Check if value is still dangerous after sanitization
+        $dangerousPatterns = [
+            '/<script/i',
+            '/javascript:/i',
+            '/onload=/i',
+            '/onerror=/i',
+            '/union.*select/i',
+            '/drop.*table/i'
+        ];
+        
+        foreach ($dangerousPatterns as $pattern) {
+            if (preg_match($pattern, $value)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     private function isLikelyDoSAttempt($data): bool
@@ -326,11 +438,13 @@ class ValidationService
     
     private function logSecurityViolation(string $type, $data): void
     {
+        $request = $this->requestStack->getCurrentRequest();
+        
         $this->logger->warning('Security validation violation detected', [
             'violation_type' => $type,
             'data_size' => $this->getDataSize($data),
-            'client_ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+            'client_ip' => $request?->getClientIp() ?? 'unknown',
+            'user_agent' => $request?->headers->get('User-Agent') ?? 'unknown'
         ]);
     }
     

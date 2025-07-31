@@ -6,6 +6,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Input length constraints for DoS prevention
@@ -187,7 +188,9 @@ class RateLimit extends Constraint
 
 class RateLimitValidator extends ConstraintValidator
 {
-    // Simple in-memory rate limiting (in production, use Redis/database)
+    // WARNING: In-memory rate limiting with periodic cleanup to prevent memory leaks
+    // For production use, replace with Redis, database, or external rate limiting service
+    // This implementation includes automatic cleanup but still not recommended for high-traffic production
     private static array $requestCounts = [];
     
     public function validate($value, Constraint $constraint): void
@@ -200,7 +203,10 @@ class RateLimitValidator extends ConstraintValidator
         $currentTime = time();
         $windowStart = $currentTime - $constraint->timeWindow;
         
-        // Clean old entries
+        // Clean old entries periodically to prevent memory leaks
+        $this->cleanupOldEntries($windowStart);
+        
+        // Clean current identifier's old entries
         if (isset(self::$requestCounts[$identifier])) {
             self::$requestCounts[$identifier] = array_filter(
                 self::$requestCounts[$identifier],
@@ -226,10 +232,56 @@ class RateLimitValidator extends ConstraintValidator
     private function getIdentifier(string $type): string
     {
         return match($type) {
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'ip' => $this->getClientIp(),
             'session' => session_id() ?: 'no-session',
             default => $type
         };
+    }
+    
+    private function getClientIp(): string
+    {
+        // Priority order for IP detection behind proxies/load balancers
+        $headers = [
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_REAL_IP',
+            'HTTP_CLIENT_IP',
+            'REMOTE_ADDR'
+        ];
+        
+        foreach ($headers as $header) {
+            if (!empty($_SERVER[$header])) {
+                $ips = explode(',', $_SERVER[$header]);
+                $ip = trim($ips[0]);
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $ip;
+                }
+            }
+        }
+        
+        return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    }
+    
+    private function cleanupOldEntries(int $windowStart): void
+    {
+        // Periodically clean up old entries to prevent memory leaks
+        static $lastCleanup = 0;
+        $now = time();
+        
+        // Clean up every 5 minutes
+        if ($now - $lastCleanup > 300) {
+            foreach (self::$requestCounts as $identifier => $timestamps) {
+                self::$requestCounts[$identifier] = array_filter(
+                    $timestamps,
+                    fn($timestamp) => $timestamp > $windowStart
+                );
+                
+                // Remove empty arrays
+                if (empty(self::$requestCounts[$identifier])) {
+                    unset(self::$requestCounts[$identifier]);
+                }
+            }
+            $lastCleanup = $now;
+        }
     }
 }
 

@@ -6,6 +6,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
+use App\Service\DisposableEmailService;
 
 /**
  * Survey-specific validation constraints
@@ -229,14 +230,12 @@ class ValidSurveyEmail extends Constraint
 
 class ValidSurveyEmailValidator extends ConstraintValidator
 {
-    // Common disposable email domains to block
-    private const DISPOSABLE_DOMAINS = [
-        '10minutemail.com',
-        'guerrillamail.com',
-        'mailinator.com',
-        'yopmail.com',
-        'tempmail.org'
-    ];
+    private DisposableEmailService $disposableEmailService;
+    
+    public function __construct(DisposableEmailService $disposableEmailService)
+    {
+        $this->disposableEmailService = $disposableEmailService;
+    }
     
     public function validate($value, Constraint $constraint): void
     {
@@ -264,8 +263,8 @@ class ValidSurveyEmailValidator extends ConstraintValidator
                 ->addViolation();
         }
         
-        // Check disposable email domains if not allowed
-        if (!$constraint->allowDisposable && in_array($domain, self::DISPOSABLE_DOMAINS)) {
+        // Check disposable email domains if not allowed using the service
+        if (!$constraint->allowDisposable && $this->disposableEmailService->isDisposableDomain($domain)) {
             $this->context->buildViolation('Disposable email addresses are not allowed')
                 ->addViolation();
         }

@@ -17,17 +17,21 @@ class ValidationCircuitBreaker
     private const DEFAULT_FAILURE_THRESHOLD = 5;
     private const DEFAULT_RECOVERY_TIMEOUT = 60; // seconds
     private const DEFAULT_TEST_REQUEST_TIMEOUT = 30; // seconds
+    private const DEFAULT_MAX_RECOVERY_TIMEOUT = 300; // 5 minutes max
     
     private string $state = self::STATE_CLOSED;
     private int $failureCount = 0;
     private int $lastFailureTime = 0;
     private int $lastSuccessTime = 0;
+    private int $consecutiveFailures = 0;
+    private array $recentFailures = [];
     
     public function __construct(
         private LoggerInterface $logger,
         private int $failureThreshold = self::DEFAULT_FAILURE_THRESHOLD,
         private int $recoveryTimeout = self::DEFAULT_RECOVERY_TIMEOUT,
-        private int $testRequestTimeout = self::DEFAULT_TEST_REQUEST_TIMEOUT
+        private int $testRequestTimeout = self::DEFAULT_TEST_REQUEST_TIMEOUT,
+        private int $maxRecoveryTimeout = self::DEFAULT_MAX_RECOVERY_TIMEOUT
     ) {
     }
     
@@ -136,6 +140,7 @@ class ValidationCircuitBreaker
     private function onSuccess(): void
     {
         $this->failureCount = 0;
+        $this->consecutiveFailures = 0; // Reset consecutive failures on success
         $this->lastSuccessTime = time();
         
         if ($this->state !== self::STATE_CLOSED) {
@@ -146,14 +151,23 @@ class ValidationCircuitBreaker
     
     private function onFailure(\Throwable $e): void
     {
+        $currentTime = time();
         $this->failureCount++;
-        $this->lastFailureTime = time();
+        $this->consecutiveFailures++;
+        $this->lastFailureTime = $currentTime;
+        
+        // Track recent failures for health check
+        $this->recentFailures[] = $currentTime;
         
         if ($this->failureCount >= $this->failureThreshold) {
             $this->state = self::STATE_OPEN;
+            $backoffTimeout = $this->calculateBackoffTimeout();
+            
             $this->logger->error('Validation circuit breaker opened due to consecutive failures', [
                 'failure_count' => $this->failureCount,
+                'consecutive_failures' => $this->consecutiveFailures,
                 'threshold' => $this->failureThreshold,
+                'backoff_timeout' => $backoffTimeout,
                 'last_exception' => $e->getMessage()
             ]);
         }
@@ -161,6 +175,57 @@ class ValidationCircuitBreaker
     
     private function shouldAttemptReset(): bool
     {
-        return (time() - $this->lastFailureTime) >= $this->recoveryTimeout;
+        $timeSinceLastFailure = time() - $this->lastFailureTime;
+        $requiredTimeout = $this->calculateBackoffTimeout();
+        
+        if ($timeSinceLastFailure < $requiredTimeout) {
+            return false;
+        }
+        
+        // Perform basic health check before attempting reset
+        return $this->performHealthCheck();
+    }
+    
+    private function calculateBackoffTimeout(): int
+    {
+        // Exponential backoff: base timeout * 2^(consecutive_failures - threshold)
+        // Capped at maxRecoveryTimeout
+        $backoffMultiplier = max(0, $this->consecutiveFailures - $this->failureThreshold);
+        $backoffTimeout = $this->recoveryTimeout * (2 ** min($backoffMultiplier, 4)); // Cap at 2^4 = 16x
+        
+        return min($backoffTimeout, $this->maxRecoveryTimeout);
+    }
+    
+    private function performHealthCheck(): bool
+    {
+        // Basic health check - check failure rate over recent time window
+        $currentTime = time();
+        $recentWindow = 300; // 5 minutes
+        
+        // Clean old failures
+        $this->recentFailures = array_filter(
+            $this->recentFailures,
+            fn($timestamp) => ($currentTime - $timestamp) <= $recentWindow
+        );
+        
+        // If we have too many recent failures, don't attempt reset yet
+        $recentFailureCount = count($this->recentFailures);
+        $maxRecentFailures = 10; // Allow max 10 failures in 5 minutes
+        
+        if ($recentFailureCount >= $maxRecentFailures) {
+            $this->logger->warning('Circuit breaker health check failed: too many recent failures', [
+                'recent_failures' => $recentFailureCount,
+                'max_allowed' => $maxRecentFailures,
+                'window_seconds' => $recentWindow
+            ]);
+            return false;
+        }
+        
+        $this->logger->info('Circuit breaker health check passed', [
+            'recent_failures' => $recentFailureCount,
+            'time_since_last_failure' => $currentTime - $this->lastFailureTime
+        ]);
+        
+        return true;
     }
 }
