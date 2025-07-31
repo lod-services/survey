@@ -12,10 +12,34 @@ framework:
         cookie_samesite: lax
         storage_factory_id: session.storage.factory.native
 
+    # Cache configuration for validation framework
+    cache:
+        pools:
+            cache.validation:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 3600 # 1 hour
+                
+            cache.validation_rules:
+                adapter: cache.adapter.filesystem  
+                default_lifetime: 3600 # 1 hour for validation rule caching
+
     #esi: true
     #fragments: true
     php_errors:
         log: true
+
+when@prod:
+    framework:
+        cache:
+            pools:
+                cache.validation:
+                    # Use APCu in production for better performance
+                    adapter: cache.adapter.apcu
+                    default_lifetime: 3600
+                    
+                cache.validation_rules:
+                    adapter: cache.adapter.apcu
+                    default_lifetime: 3600
 
 when@test:
     framework:
