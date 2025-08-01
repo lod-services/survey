@@ -15,3 +15,14 @@
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
+
+###> development/debugging files exclusion ###
+# Development and debugging files (specific patterns to avoid blocking legitimate test files)
+/csrf_verification.php
+/dev_*.php
+/*_verification.php
+/*_debug.php
+/debug_tools/
+/dev_tools/
+/debug/
+###< development/debugging files exclusion ###
