@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Survey Completed - {{ survey.title }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card text-center">
+                <div class="card-body py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h1 class="h3 text-success mb-3">Survey Completed!</h1>
+                    <h4 class="mb-4">{{ survey.title }}</h4>
+                    
+                    <p class="lead text-muted mb-4">
+                        Thank you for taking the time to complete our survey. 
+                        Your responses have been recorded successfully.
+                    </p>
+
+                    {% if survey.branchingEnabled %}
+                        <div class="alert alert-info mx-auto" style="max-width: 500px;">
+                            <i class="fas fa-sitemap"></i>
+                            <strong>Smart Survey:</strong> This survey used AI-powered branching to personalize your experience based on your responses.
+                        </div>
+                    {% endif %}
+
+                    <div class="row justify-content-center mt-4">
+                        <div class="col-md-8">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Survey Summary</h6>
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="h5 text-primary">{{ session.progressData.answeredQuestions ?? 0 }}</div>
+                                            <small class="text-muted">Questions Answered</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="h5 text-success">100%</div>
+                                            <small class="text-muted">Completed</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="h5 text-info">{{ session.completedAt|date('H:i') }}</div>
+                                            <small class="text-muted">Finished At</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <p class="text-muted">
+                            <small>
+                                Session ID: {{ session.sessionToken|slice(0, 8) }}... | 
+                                Completed: {{ session.completedAt|date('M j, Y \\a\\t H:i') }}
+                            </small>
+                        </p>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-outline-primary" onclick="window.close()">
+                            Close Window
+                        </button>
+                        <a href="{{ path('app_home') }}" class="btn btn-primary ms-2">
+                            Return to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-close window after 30 seconds if it was opened as a popup
+setTimeout(function() {
+    if (window.opener) {
+        window.close();
+    }
+}, 30000);
+</script>
+{% endblock %}

@@ -1,93 +1,169 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Home - Survey Application{% endblock %}
+{% block title %}AI-Powered Survey Platform - Home{% endblock %}
 
 {% block body %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="jumbotron bg-primary text-white p-4 rounded">
-            <h1 class="display-4">Welcome to Survey Application</h1>
-            <p class="lead">This is a Symfony application with Bootstrap and Stimulus integration.</p>
-            <hr class="my-4">
-            <p>The application includes:</p>
-            <ul>
-                <li>✅ Symfony 7.3 Framework</li>
-                <li>✅ Web Profiler for debugging</li>
-                <li>✅ Twig templating engine</li>
-                <li>✅ Bootstrap 5 for responsive UI</li>
-                <li>✅ Stimulus for interactive JavaScript</li>
-                <li>✅ Webpack Encore for asset management</li>
-            </ul>
+<div class="py-5">
+    <!-- Hero Section -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 mb-4">🤖 AI-Powered Survey Platform</h1>
+        <p class="lead mb-4">Create intelligent surveys with dynamic branching that adapts to respondent answers</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ path('app_survey_new') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus"></i> Create Your First Survey
+            </a>
+            <a href="{{ path('app_survey_index') }}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-poll"></i> View All Surveys
+            </a>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5>Test Stimulus Controller</h5>
-            </div>
-            <div class="card-body" data-controller="hello">
-                <div class="mb-3">
-                    <label for="name" class="form-label">Your Name:</label>
-                    <input type="text" id="name" class="form-control" data-hello-target="name" placeholder="Enter your name">
-                </div>
-                <button type="button" class="btn btn-primary" data-action="click->hello#greet">Say Hello</button>
-                <div class="mt-3">
-                    <div data-hello-target="output" class="alert alert-success" style="display: none;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Bootstrap Components Test</h5>
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-sitemap fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Smart Branching</h5>
+                    <p class="card-text">AI-powered conditional logic that shows relevant questions based on previous responses</p>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="alert alert-info" role="alert">
-                            <h6 class="alert-heading">Information</h6>
-                            This is a Bootstrap alert component.
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-primary">Button 1</button>
-                            <button type="button" class="btn btn-outline-primary">Button 2</button>
-                            <button type="button" class="btn btn-outline-primary">Button 3</button>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: 75%"></div>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-cogs fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Visual Rule Builder</h5>
+                    <p class="card-text">Create complex conditional logic without coding using our intuitive drag-and-drop interface</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Analytics & Insights</h5>
+                    <p class="card-text">Track completion rates, branch effectiveness, and respondent engagement patterns</p>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Development Information</h5>
+    <!-- How It Works -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">How AI-Powered Branching Works</h2>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <span class="h4 mb-0 text-primary">1</span>
             </div>
-            <div class="card-body">
-                <p><strong>Environment:</strong> {{ app.environment }}</p>
-                <p><strong>Debug Mode:</strong> {{ app.debug ? 'Enabled' : 'Disabled' }}</p>
-                <p><strong>Controller:</strong> {{ controller_name }}</p>
-                {% if app.debug %}
-                    <div class="alert alert-warning">
-                        <strong>Web Profiler:</strong> Check the bottom of the page for the profiler toolbar.
-                    </div>
-                {% endif %}
+            <h6>Create Survey</h6>
+            <p class="text-muted small">Design your survey with various question types</p>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <span class="h4 mb-0 text-primary">2</span>
+            </div>
+            <h6>Add Rules</h6>
+            <p class="text-muted small">Set up conditional logic for dynamic branching</p>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <span class="h4 mb-0 text-primary">3</span>
+            </div>
+            <h6>AI Processing</h6>
+            <p class="text-muted small">System evaluates responses and determines next questions</p>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                <span class="h4 mb-0 text-primary">4</span>
+            </div>
+            <h6>Personalized Experience</h6>
+            <p class="text-muted small">Respondents see only relevant questions</p>
+        </div>
+    </div>
+
+    <!-- Example Use Cases -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">📋 Perfect For</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6><i class="fas fa-users text-primary"></i> HR Professionals</h6>
+                    <ul class="list-unstyled text-muted">
+                        <li>• Employee satisfaction surveys</li>
+                        <li>• Exit interviews</li>
+                        <li>• Skills assessments</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6><i class="fas fa-flask text-success"></i> Researchers</h6>
+                    <ul class="list-unstyled text-muted">
+                        <li>• Academic research studies</li>
+                        <li>• Market research</li>
+                        <li>• User experience testing</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6><i class="fas fa-chart-bar text-info"></i> Marketers</h6>
+                    <ul class="list-unstyled text-muted">
+                        <li>• Customer feedback</li>
+                        <li>• Product research</li>
+                        <li>• Lead qualification</li>
+                    </ul>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- Technical Implementation -->
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🏗️ Technical Implementation</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li>✅ <strong>Symfony 7.3</strong> - Modern PHP framework</li>
+                        <li>✅ <strong>Doctrine ORM</strong> - Database abstraction</li>
+                        <li>✅ <strong>Rule Engine</strong> - JSON-based conditional logic</li>
+                        <li>✅ <strong>Session Management</strong> - Progress tracking</li>
+                        <li>✅ <strong>Security</strong> - CSRF protection & input sanitization</li>
+                        <li>✅ <strong>Caching</strong> - Redis for performance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🎯 Key Features</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li>🔄 <strong>Dynamic Branching</strong> - Real-time question flow</li>
+                        <li>📊 <strong>Multiple Question Types</strong> - Text, choice, rating, etc.</li>
+                        <li>🧠 <strong>Rule Validation</strong> - Prevents infinite loops</li>
+                        <li>📱 <strong>Responsive Design</strong> - Works on all devices</li>
+                        <li>📈 <strong>Progress Tracking</strong> - Real-time completion status</li>
+                        <li>🔍 <strong>Preview Mode</strong> - Test surveys before publishing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Get Started CTA -->
+    <div class="text-center mt-5">
+        <h3 class="mb-3">Ready to Create Intelligent Surveys?</h3>
+        <p class="text-muted mb-4">Join thousands of professionals using AI-powered survey branching</p>
+        <a href="{{ path('app_survey_new') }}" class="btn btn-success btn-lg">
+            <i class="fas fa-rocket"></i> Get Started Now
+        </a>
     </div>
 </div>
 {% endblock %}
