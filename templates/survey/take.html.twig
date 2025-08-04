@@ -1,0 +1,363 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ survey.title }} - Survey{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Survey Header -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h1 class="h3">{{ survey.title }}</h1>
+                    {% if survey.description %}
+                        <p class="text-muted">{{ survey.description }}</p>
+                    {% endif %}
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ progress.progressPercentage }}%"
+                             aria-valuenow="{{ progress.progressPercentage }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Question {{ progress.answeredQuestions + 1 }} of {{ progress.totalQuestions }}
+                        </small>
+                        <small class="text-muted">
+                            {{ progress.progressPercentage }}% Complete
+                        </small>
+                        {% if survey.branchingEnabled %}
+                            <small class="badge bg-info">
+                                <i class="fas fa-sitemap"></i> Smart Branching
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            {% if currentQuestion %}
+                <div class="card mb-4" id="question-card">
+                    <div class="card-body">
+                        <form id="survey-form">
+                            <div class="mb-4">
+                                <h4 class="question-text">{{ currentQuestion.content }}</h4>
+                                {% if currentQuestion.required %}
+                                    <small class="text-danger">* Required</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="question-input">
+                                {% if currentQuestion.type == 'text' %}
+                                    <input type="text" class="form-control form-control-lg" name="answer" 
+                                           {{ currentQuestion.required ? 'required' : '' }} 
+                                           placeholder="Enter your answer...">
+
+                                {% elseif currentQuestion.type == 'textarea' %}
+                                    <textarea class="form-control" name="answer" rows="4" 
+                                              {{ currentQuestion.required ? 'required' : '' }}
+                                              placeholder="Enter your detailed answer..."></textarea>
+
+                                {% elseif currentQuestion.type == 'radio' %}
+                                    {% for option in currentQuestion.options %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="answer" 
+                                                   value="{{ option }}" id="option{{ loop.index }}"
+                                                   {{ currentQuestion.required ? 'required' : '' }}>
+                                            <label class="form-check-label" for="option{{ loop.index }}">
+                                                {{ option }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+
+                                {% elseif currentQuestion.type == 'checkbox' %}
+                                    {% for option in currentQuestion.options %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" name="answer[]" 
+                                                   value="{{ option }}" id="check{{ loop.index }}">
+                                            <label class="form-check-label" for="check{{ loop.index }}">
+                                                {{ option }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+
+                                {% elseif currentQuestion.type == 'select' %}
+                                    <select class="form-select form-select-lg" name="answer" 
+                                            {{ currentQuestion.required ? 'required' : '' }}>
+                                        <option value="">Choose an option...</option>
+                                        {% for option in currentQuestion.options %}
+                                            <option value="{{ option }}">{{ option }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                {% elseif currentQuestion.type == 'rating' %}
+                                    <div class="rating-scale text-center">
+                                        {% set maxRating = currentQuestion.options[0] ?? 5 %}
+                                        {% for i in 1..maxRating %}
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="answer" 
+                                                       value="{{ i }}" id="rating{{ i }}"
+                                                       {{ currentQuestion.required ? 'required' : '' }}>
+                                                <label class="form-check-label rating-label" for="rating{{ i }}">
+                                                    {{ i }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <small class="text-muted">Poor</small>
+                                            <small class="text-muted">Excellent</small>
+                                        </div>
+                                    </div>
+
+                                {% elseif currentQuestion.type == 'yesno' %}
+                                    <div class="d-grid gap-2 d-md-block text-center">
+                                        <button type="button" class="btn btn-outline-success btn-lg me-3 yesno-btn" data-value="Yes">
+                                            <i class="fas fa-check"></i> Yes
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-lg yesno-btn" data-value="No">
+                                            <i class="fas fa-times"></i> No
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="answer" {{ currentQuestion.required ? 'required' : '' }}>
+
+                                {% endif %}
+                            </div>
+
+                            <input type="hidden" name="questionId" value="{{ currentQuestion.id }}">
+                            <input type="hidden" name="sessionToken" value="{{ session.sessionToken }}">
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="d-flex justify-content-between">
+                    {% if canGoBack %}
+                        <button type="button" class="btn btn-outline-secondary" id="back-btn">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                    {% else %}
+                        <div></div>
+                    {% endif %}
+
+                    <button type="button" class="btn btn-primary btn-lg" id="next-btn">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div id="loading-text">Processing your response...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sessionToken = '{{ session.sessionToken }}';
+    const surveyId = {{ survey.id }};
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+
+    // Yes/No button handlers
+    document.querySelectorAll('.yesno-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.yesno-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelector('input[name="answer"]').value = this.dataset.value;
+        });
+    });
+
+    // Next button handler
+    document.getElementById('next-btn').addEventListener('click', function() {
+        const form = document.getElementById('survey-form');
+        const formData = new FormData(form);
+        
+        // Validate required fields
+        const requiredInputs = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredInputs.forEach(input => {
+            if (!input.value.trim()) {
+                isValid = false;
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+
+        if (!isValid) {
+            alert('Please answer all required questions before continuing.');
+            return;
+        }
+
+        // Handle checkbox arrays
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]:checked');
+        if (checkboxes.length > 0) {
+            const values = Array.from(checkboxes).map(cb => cb.value);
+            formData.set('value', JSON.stringify(values));
+        } else {
+            formData.set('value', formData.get('answer') || '');
+        }
+
+        loadingModal.show();
+        document.getElementById('loading-text').textContent = '{{ survey.branchingEnabled ? "AI is determining your next question..." : "Loading next question..." }}';
+
+        fetch('/survey/session/' + sessionToken + '/submit', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingModal.hide();
+            
+            if (data.success) {
+                if (data.isCompleted) {
+                    window.location.href = '/survey/session/' + sessionToken + '/complete';
+                } else if (data.nextQuestion) {
+                    updateQuestion(data.nextQuestion);
+                    updateProgress(data.progress);
+                    updateBackButton(data.canGoBack);
+                }
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            loadingModal.hide();
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+
+    // Back button handler
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', function() {
+            loadingModal.show();
+            document.getElementById('loading-text').textContent = 'Loading previous question...';
+
+            fetch('/survey/session/' + sessionToken + '/back', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingModal.hide();
+                
+                if (data.success) {
+                    updateQuestion(data.currentQuestion);
+                    updateProgress(data.progress);
+                    updateBackButton(data.canGoBack);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                loadingModal.hide();
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        });
+    }
+
+    function updateQuestion(question) {
+        // Update question content
+        document.querySelector('.question-text').textContent = question.content;
+        
+        // Update form inputs based on question type
+        const questionInput = document.querySelector('.question-input');
+        let html = '';
+
+        switch(question.type) {
+            case 'text':
+                html = `<input type="text" class="form-control form-control-lg" name="answer" 
+                              ${question.required ? 'required' : ''} placeholder="Enter your answer...">`;
+                break;
+            case 'textarea':
+                html = `<textarea class="form-control" name="answer" rows="4" 
+                                 ${question.required ? 'required' : ''} placeholder="Enter your detailed answer..."></textarea>`;
+                break;
+            case 'radio':
+                html = question.options.map((option, index) => `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="answer" 
+                               value="${option}" id="option${index + 1}" ${question.required ? 'required' : ''}>
+                        <label class="form-check-label" for="option${index + 1}">
+                            ${option}
+                        </label>
+                    </div>
+                `).join('');
+                break;
+            // Add other question types as needed
+        }
+
+        questionInput.innerHTML = html;
+        
+        // Update hidden fields
+        document.querySelector('input[name="questionId"]').value = question.id;
+    }
+
+    function updateProgress(progress) {
+        document.querySelector('.progress-bar').style.width = progress.progressPercentage + '%';
+        document.querySelector('.progress-bar').setAttribute('aria-valuenow', progress.progressPercentage);
+    }
+
+    function updateBackButton(canGoBack) {
+        const backBtn = document.getElementById('back-btn');
+        if (backBtn) {
+            backBtn.style.display = canGoBack ? 'block' : 'none';
+        }
+    }
+});
+</script>
+
+<style>
+.rating-label {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border: 2px solid #dee2e6;
+    border-radius: 50%;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rating-label:hover {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+input[type="radio"]:checked + .rating-label {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.yesno-btn.active {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+</style>
+{% endblock %}

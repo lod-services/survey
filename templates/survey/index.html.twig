@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Surveys - AI-Powered Survey Branching{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>📋 Survey Management</h1>
+        <a href="{{ path('app_survey_new') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Survey
+        </a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    <div class="row">
+        {% if surveys is empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-poll fa-4x text-muted mb-3"></i>
+                    <h3 class="text-muted">No surveys created yet</h3>
+                    <p class="text-muted mb-4">Create your first AI-powered survey with dynamic branching</p>
+                    <a href="{{ path('app_survey_new') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus"></i> Create Your First Survey
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            {% for survey in surveys %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title">{{ survey.title }}</h5>
+                                {% if survey.branchingEnabled %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-sitemap"></i> Branching
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if survey.description %}
+                                <p class="card-text text-muted">{{ survey.description|slice(0, 100) }}{% if survey.description|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-alt"></i> Created {{ survey.createdAt|date('M j, Y') }}
+                                </small>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a href="{{ path('app_survey_show', {id: survey.id}) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{{ path('app_survey_edit', {id: survey.id}) }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{{ path('app_survey_start', {id: survey.id}) }}" class="btn btn-outline-success btn-sm" target="_blank">
+                                    <i class="fas fa-play"></i> Take
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
