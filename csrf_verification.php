@@ -32,8 +32,15 @@ function getCachedFileContent($filename) {
     return $content;
 }
 
-// Check APP_SECRET (check both .env and .env.local)
-$envFiles = [__DIR__ . '/.env.local', __DIR__ . '/.env'];
+// Check APP_SECRET following Symfony environment precedence
+// Priority: .env.local > .env.{environment} > .env
+$envFiles = [
+    __DIR__ . '/.env.local',
+    __DIR__ . '/.env.dev',   // Development environment
+    __DIR__ . '/.env.test',  // Test environment
+    __DIR__ . '/.env.prod',  // Production environment
+    __DIR__ . '/.env'        // Default fallback
+];
 $appSecretFound = false;
 
 foreach ($envFiles as $envFile) {
