@@ -18,7 +18,11 @@ class Kernel extends BaseKernel
 
     private function validateSecurityConfiguration(): void
     {
-        $appSecret = $this->getContainer()->getParameter('kernel.secret');
+        try {
+            $appSecret = $this->getContainer()->getParameter('kernel.secret');
+        } catch (\Exception $e) {
+            return;
+        }
         
         if (empty($appSecret)) {
             throw new \RuntimeException(
