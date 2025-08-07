@@ -2,8 +2,8 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Survey Application{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>📊</text></svg>">
+        <title>{% block title %}Smart Survey Template Ecosystem{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>📋</text></svg>">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         {% block stylesheets %}
             {{ encore_entry_link_tags('app') }}
@@ -16,14 +16,17 @@
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container">
-                <a class="navbar-brand" href="/">📊 Survey Application</a>
+                <a class="navbar-brand" href="{{ path('dashboard') }}">📋 Survey Templates</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link" href="/">Home</a>
+                            <a class="nav-link" href="{{ path('dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('template_library') }}">Template Library</a>
                         </li>
                     </ul>
                 </div>
@@ -36,7 +39,7 @@
 
         <footer class="bg-light mt-5 py-3">
             <div class="container">
-                <p class="text-center text-muted">&copy; 2025 Survey Application. Built with Symfony, Bootstrap, and Stimulus.</p>
+                <p class="text-center text-muted">&copy; 2025 Smart Survey Template Ecosystem. Professional survey templates with compliance features.</p>
             </div>
         </footer>
     </body>

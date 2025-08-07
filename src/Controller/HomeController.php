@@ -11,8 +11,7 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function index(): Response
     {
-        return $this->render('home/index.html.twig', [
-            'controller_name' => 'HomeController',
-        ]);
+        // Redirect to dashboard for the template ecosystem
+        return $this->redirectToRoute('dashboard');
     }
 }
