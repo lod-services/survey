@@ -28,6 +28,11 @@ This is a Symfony-based survey application with security-focused secret manageme
    APP_SECRET=your_generated_64_character_secret_here
    ```
 
+4. Set secure file permissions:
+   ```bash
+   chmod 600 .env.local
+   ```
+
 #### For Testing Environment
 1. Copy the test template:
    ```bash
@@ -36,11 +41,17 @@ This is a Symfony-based survey application with security-focused secret manageme
 
 2. Generate a separate test secret and update the file.
 
+3. Set secure file permissions:
+   ```bash
+   chmod 600 .env.test.local
+   ```
+
 ### Security Requirements
 - **Secret Length**: Must be exactly 64 characters (256-bit entropy)  
 - **Format**: Hexadecimal characters only
 - **Storage**: Never commit actual secrets to version control
 - **Generation**: Use cryptographically secure random generation
+- **Permissions**: Set restrictive file permissions (600) for secret files
 
 ### File Structure
 ```
