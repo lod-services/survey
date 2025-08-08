@@ -12,6 +12,6 @@ class ApplicationTest extends WebTestCase
         $crawler = $client->request('GET', '/');
 
         $this->assertResponseIsSuccessful();
-        $this->assertSelectorTextContains('h1', 'Welcome to Your Survey Application');
+        $this->assertSelectorTextContains('h1', 'Welcome to Survey Application');
     }
 }
