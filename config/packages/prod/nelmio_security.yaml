@@ -1,0 +1,27 @@
+nelmio_security:
+    # Production environment: Strictest security policies
+    
+    # Strict-Transport-Security: Enforce HTTPS in production
+    forced_ssl:
+        enabled: true
+        hsts_max_age: 31536000
+        hsts_subdomains: true
+        
+    # Content Security Policy: Strictest policies for production
+    csp:
+        enabled: true
+        enforce:
+            # Production: Strict CSP without unsafe-inline for enhanced security
+            default-src: ["'self'"]
+            # Scripts: Only self-hosted, remove unsafe-inline for better security
+            script-src: ["'self'"]
+            # Styles: Only self-hosted, remove unsafe-inline for better security
+            # Note: Consider implementing nonces for inline styles if needed
+            style-src: ["'self'"]
+            img-src: ["'self'", "data:"]
+            font-src: ["'self'"]
+            connect-src: ["'self'"]
+            form-action: ["'self'"]
+            base-uri: ["'self'"]
+            object-src: ["'none'"]
+            report-uri: ["/security/csp-report"]

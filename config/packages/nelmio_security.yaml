@@ -1,0 +1,47 @@
+nelmio_security:
+    # X-Frame-Options: Prevent clickjacking attacks
+    clickjacking:
+        paths:
+            '^/.*': SAMEORIGIN
+
+    # X-Content-Type-Options: Prevent MIME sniffing vulnerabilities
+    content_type:
+        nosniff: true
+
+    # X-XSS-Protection: Enable XSS filtering (legacy browser support)
+    xss_protection:
+        enabled: true
+        mode_block: true
+
+    # Referrer-Policy: Control referrer information disclosure
+    referrer_policy:
+        enabled: true
+        policies: ['strict-origin-when-cross-origin']
+
+    # Content Security Policy: Restrict resource loading
+    csp:
+        enabled: true
+        compat_headers: false  # Use modern Content-Security-Policy header only
+        enforce:
+            # Default policy for all resources
+            default-src: ["'self'"]
+            # Allow self-hosted and inline scripts (for Stimulus)
+            # Note: Consider implementing nonces to replace unsafe-inline for enhanced security
+            script-src: ["'self'", "'unsafe-inline'"]
+            # Allow self-hosted and inline styles (for Bootstrap)
+            # Note: Consider implementing nonces to replace unsafe-inline for enhanced security
+            style-src: ["'self'", "'unsafe-inline'"]
+            # Allow self-hosted images and data URIs
+            img-src: ["'self'", "data:"]
+            # Allow self-hosted fonts only
+            font-src: ["'self'"]
+            # AJAX requests to same origin only
+            connect-src: ["'self'"]
+            # Form submissions to same origin only
+            form-action: ["'self'"]
+            # Restrict base URL changes
+            base-uri: ["'self'"]
+            # Block plugins like Flash
+            object-src: ["'none'"]
+            # CSP violation reporting endpoint
+            report-uri: ["/security/csp-report"]
