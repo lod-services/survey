@@ -19,6 +19,17 @@ class SecurityController extends AbstractController
             return new Response('', 400);
         }
         
+        // Validate JSON size limit (max 8KB for CSP reports)
+        if (strlen($content) > 8192) {
+            $logger->warning('CSP Report Too Large', [
+                'type' => 'csp_report_size_limit',
+                'content_length' => strlen($content),
+                'user_agent' => $request->headers->get('User-Agent'),
+                'ip_address' => $request->getClientIp(),
+            ]);
+            return new Response('', 413);
+        }
+        
         $data = json_decode($content, true);
         
         if ($data && isset($data['csp-report'])) {

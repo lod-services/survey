@@ -17,7 +17,7 @@ class SecurityHeadersTest extends WebTestCase
         $this->assertTrue($response->headers->has('X-Frame-Options'), 'X-Frame-Options header is missing');
         $this->assertTrue($response->headers->has('X-Content-Type-Options'), 'X-Content-Type-Options header is missing');
         $this->assertTrue($response->headers->has('X-XSS-Protection'), 'X-XSS-Protection header is missing');
-        $this->assertTrue($response->headers->has('X-Content-Security-Policy'), 'X-Content-Security-Policy header is missing');
+        $this->assertTrue($response->headers->has('Content-Security-Policy'), 'Content-Security-Policy header is missing');
         $this->assertTrue($response->headers->has('Referrer-Policy'), 'Referrer-Policy header is missing');
     }
     
@@ -35,7 +35,7 @@ class SecurityHeadersTest extends WebTestCase
         $this->assertEquals('strict-origin-when-cross-origin', $response->headers->get('Referrer-Policy'));
         
         // Test CSP contains required directives
-        $csp = $response->headers->get('X-Content-Security-Policy');
+        $csp = $response->headers->get('Content-Security-Policy');
         $this->assertStringContainsString("default-src 'self'", $csp);
         $this->assertStringContainsString("script-src 'self'", $csp);
         $this->assertStringContainsString("style-src 'self'", $csp);
@@ -86,7 +86,7 @@ class SecurityHeadersTest extends WebTestCase
             
             $this->assertTrue($response->headers->has('X-Frame-Options'), 
                 "X-Frame-Options missing on route: {$route}");
-            $this->assertTrue($response->headers->has('X-Content-Security-Policy'), 
+            $this->assertTrue($response->headers->has('Content-Security-Policy'), 
                 "CSP missing on route: {$route}");
         }
     }

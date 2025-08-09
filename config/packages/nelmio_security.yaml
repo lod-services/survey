@@ -25,8 +25,10 @@ nelmio_security:
             # Default policy for all resources
             default-src: ["'self'"]
             # Allow self-hosted and inline scripts (for Stimulus)
+            # Note: Consider implementing nonces to replace unsafe-inline for enhanced security
             script-src: ["'self'", "'unsafe-inline'"]
             # Allow self-hosted and inline styles (for Bootstrap)
+            # Note: Consider implementing nonces to replace unsafe-inline for enhanced security
             style-src: ["'self'", "'unsafe-inline'"]
             # Allow self-hosted images and data URIs
             img-src: ["'self'", "data:"]
