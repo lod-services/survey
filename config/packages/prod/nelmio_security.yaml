@@ -1,0 +1,24 @@
+nelmio_security:
+    # Production environment: Strictest security policies
+    
+    # Strict-Transport-Security: Enforce HTTPS in production
+    forced_ssl:
+        enabled: true
+        hsts_max_age: 31536000
+        hsts_subdomains: true
+        
+    # Content Security Policy: Strictest policies for production
+    csp:
+        enabled: true
+        enforce:
+            # Production: Maintain current CSP but could be enhanced with nonces in future
+            default-src: ["'self'"]
+            script-src: ["'self'", "'unsafe-inline'"]
+            style-src: ["'self'", "'unsafe-inline'"]
+            img-src: ["'self'", "data:"]
+            font-src: ["'self'"]
+            connect-src: ["'self'"]
+            form-action: ["'self'"]
+            base-uri: ["'self'"]
+            object-src: ["'none'"]
+            report-uri: ["/security/csp-report"]

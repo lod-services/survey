@@ -1,0 +1,9 @@
+nelmio_security:
+    # Development environment: Relaxed CSP for debugging tools
+    csp:
+        enabled: true
+        enforce:
+            # Allow debugging tools and eval() for development
+            script-src: ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
+            # Allow inline styles for development convenience  
+            style-src: ["'self'", "'unsafe-inline'"]
