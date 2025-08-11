@@ -12,7 +12,11 @@ class Kernel extends BaseKernel
     public function boot(): void
     {
         parent::boot();
-        $this->validateAppSecret();
+        
+        // Only validate APP_SECRET in non-production environments for performance
+        if ($this->environment !== 'prod') {
+            $this->validateAppSecret();
+        }
     }
 
     private function validateAppSecret(): void
