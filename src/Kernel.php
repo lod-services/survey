@@ -17,6 +17,14 @@ class Kernel extends BaseKernel
 
     private function validateAppSecret(): void
     {
+        // Skip validation in production for performance unless explicitly enabled
+        $env = $_ENV['APP_ENV'] ?? 'prod';
+        $forceValidation = $_ENV['APP_SECRET_VALIDATION'] ?? 'auto';
+        
+        if ($env === 'prod' && $forceValidation !== 'enabled') {
+            return;
+        }
+        
         $appSecret = $_ENV['APP_SECRET'] ?? '';
         
         if (empty($appSecret)) {
