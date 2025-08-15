@@ -1,0 +1,142 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Using {{ template.title }}{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_template_demo') }}">Template Marketplace</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('app_template_demo_detail', {'id': template.id}) }}">{{ template.title }}</a></li>
+                <li class="breadcrumb-item active">Use Template</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="h3 mb-0">🚀 Using: {{ template.title }}</h1>
+                <small class="text-muted">{{ template.industry }} • {{ template.category }}</small>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5>📋 Template Implementation</h5>
+                    <p>This template has been loaded and is ready for customization. In a full implementation, this page would:</p>
+                    <ul>
+                        <li>Generate a survey form based on the template's question schema</li>
+                        <li>Apply customization options based on your organization profile</li>
+                        <li>Include relevant compliance requirements ({{ template.complianceRequirements|length }} available)</li>
+                        <li>Allow you to modify questions before publishing</li>
+                    </ul>
+                </div>
+
+                <div class="mb-4">
+                    <h5>📝 Template Questions ({{ template.questionSchema|length }})</h5>
+                    {% if template.questionSchema is not empty %}
+                        <form>
+                            {% for question in template.questionSchema %}
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <strong>{{ loop.index }}. {{ question.label ?? 'Question ' ~ loop.index }}</strong>
+                                        {% if question.required is defined and question.required %}
+                                            <span class="text-danger">*</span>
+                                        {% endif %}
+                                    </label>
+                                    
+                                    {% if question.description is defined %}
+                                        <small class="form-text text-muted d-block mb-2">{{ question.description }}</small>
+                                    {% endif %}
+                                    
+                                    {% if question.type == 'text' %}
+                                        <input type="text" class="form-control" 
+                                               placeholder="{{ question.placeholder ?? 'Enter your answer...' }}" disabled>
+                                    {% elseif question.type == 'email' %}
+                                        <input type="email" class="form-control" 
+                                               placeholder="{{ question.placeholder ?? 'Enter your email...' }}" disabled>
+                                    {% elseif question.type == 'textarea' %}
+                                        <textarea class="form-control" rows="3" 
+                                                  placeholder="{{ question.placeholder ?? 'Enter your response...' }}" disabled></textarea>
+                                    {% elseif question.type == 'select' %}
+                                        <select class="form-select" disabled>
+                                            <option>{{ question.placeholder ?? 'Select an option...' }}</option>
+                                            {% if question.options is defined %}
+                                                {% for option in question.options %}
+                                                    <option>{{ option }}</option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                    {% elseif question.type == 'radio' %}
+                                        {% if question.options is defined %}
+                                            {% for option in question.options %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" 
+                                                           name="question_{{ loop.parent.loop.index }}" 
+                                                           id="q{{ loop.parent.loop.index }}_{{ loop.index }}" disabled>
+                                                    <label class="form-check-label" for="q{{ loop.parent.loop.index }}_{{ loop.index }}">
+                                                        {{ option }}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% elseif question.type == 'checkbox' %}
+                                        {% if question.options is defined %}
+                                            {% for option in question.options %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           id="q{{ loop.parent.loop.index }}_{{ loop.index }}" disabled>
+                                                    <label class="form-check-label" for="q{{ loop.parent.loop.index }}_{{ loop.index }}">
+                                                        {{ option }}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </form>
+                    {% else %}
+                        <p class="text-muted">No questions defined in this template.</p>
+                    {% endif %}
+                </div>
+
+                {% if template.complianceRequirements is not empty %}
+                    <div class="mb-4">
+                        <h5>🛡️ Compliance Requirements</h5>
+                        <div class="alert alert-warning">
+                            <p><strong>This template includes the following compliance features:</strong></p>
+                            <ul class="mb-0">
+                                {% for requirement in template.complianceRequirements %}
+                                    <li>{{ requirement }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="alert alert-success">
+                    <h5>✅ Next Steps</h5>
+                    <p>In a complete implementation, you would be able to:</p>
+                    <ol class="mb-0">
+                        <li>Customize the questions for your specific needs</li>
+                        <li>Configure compliance settings based on your requirements</li>
+                        <li>Set up data collection and response handling</li>
+                        <li>Publish the survey and share it with your audience</li>
+                    </ol>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex">
+                    <button class="btn btn-success btn-lg" disabled>📊 Create Survey (Coming Soon)</button>
+                    <a href="{{ path('app_template_demo_detail', {'id': template.id}) }}" 
+                       class="btn btn-outline-secondary">← Back to Template</a>
+                    <a href="{{ path('app_template_demo') }}" 
+                       class="btn btn-outline-secondary">🏪 Browse More Templates</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Template Marketplace{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">🏪 Smart Survey Template Marketplace</h1>
+        <p class="lead">Discover industry-specific survey templates with intelligent recommendations</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search Templates</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ searchTerm }}" placeholder="Search by title or description...">
+            </div>
+            <div class="col-md-3">
+                <label for="industry" class="form-label">Industry</label>
+                <select class="form-select" id="industry" name="industry">
+                    <option value="">All Industries</option>
+                    {% for industry in industries %}
+                        <option value="{{ industry }}" {{ selectedIndustry == industry ? 'selected' : '' }}>
+                            {{ industry }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="category">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category }}" {{ selectedCategory == category ? 'selected' : '' }}>
+                            {{ category }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">🔍 Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if templates is empty %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5>📝 No Templates Found</h5>
+                <p>We couldn't find any templates matching your criteria. Try adjusting your search filters or check back later for new templates.</p>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="row">
+        {% for template in templates %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <small class="text-muted">{{ template.industry }}</small>
+                        {% if template.isVerified %}
+                            <span class="badge bg-success">✓ Verified</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ template.title }}</h5>
+                        <p class="card-text">{{ template.description|length > 100 ? template.description|slice(0, 100) ~ '...' : template.description }}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-secondary">{{ template.category }}</span>
+                            {% if template.averageRating %}
+                                <div>
+                                    {% for i in 1..5 %}
+                                        {% if i <= template.averageRating %}
+                                            <span class="text-warning">★</span>
+                                        {% else %}
+                                            <span class="text-muted">☆</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <small class="text-muted">({{ template.averageRating }})</small>
+                                </div>
+                            {% else %}
+                                <small class="text-muted">No ratings yet</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <small class="text-muted">
+                                📊 Used {{ template.usageCount }} times
+                            </small>
+                            {% if template.complianceRequirements is not empty %}
+                                <small class="text-info">
+                                    🛡️ {{ template.complianceRequirements|length }} compliance features
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-grid gap-2">
+                            <a href="{{ path('app_template_demo_detail', {'id': loop.index}) }}" 
+                               class="btn btn-outline-primary">👁️ View Details</a>
+                            <a href="{{ path('app_template_demo_use', {'id': loop.index}) }}" 
+                               class="btn btn-success">🚀 Use Template</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="alert alert-light">
+            <h5>🎯 Features Coming Soon</h5>
+            <ul class="mb-0">
+                <li><strong>Smart Recommendations:</strong> AI-powered template suggestions based on your profile</li>
+                <li><strong>Compliance Integration:</strong> Automatic GDPR, HIPAA, and SOX compliance features</li>
+                <li><strong>Community Platform:</strong> Expert-verified templates and user contributions</li>
+                <li><strong>Dynamic Customization:</strong> Templates that adapt to your organization's needs</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
