@@ -1,0 +1,149 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ template.title }} - Template Details{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_template_demo') }}">Template Marketplace</a></li>
+                <li class="breadcrumb-item active">{{ template.title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">{{ template.title }}</h1>
+                    <small class="text-muted">{{ template.industry }} • {{ template.category }}</small>
+                </div>
+                {% if template.isVerified %}
+                    <span class="badge bg-success fs-6">✓ Verified</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <p class="lead">{{ template.description }}</p>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>📊 Template Statistics</h5>
+                        <ul class="list-unstyled">
+                            <li><strong>Usage Count:</strong> {{ template.usageCount }} times</li>
+                            <li><strong>Created:</strong> {{ template.createdAt|date('F j, Y') }}</li>
+                            <li><strong>Last Updated:</strong> {{ template.updatedAt|date('F j, Y') }}</li>
+                            {% if template.createdBy %}
+                                <li><strong>Created by:</strong> {{ template.createdBy.name }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>⭐ Ratings</h5>
+                        {% if template.averageRating %}
+                            <div class="mb-2">
+                                {% for i in 1..5 %}
+                                    {% if i <= template.averageRating %}
+                                        <span class="text-warning fs-4">★</span>
+                                    {% else %}
+                                        <span class="text-muted fs-4">☆</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p>Average: {{ template.averageRating }}/5 ({{ template.ratings|length }} reviews)</p>
+                        {% else %}
+                            <p class="text-muted">No ratings yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if template.complianceRequirements is not empty %}
+                    <div class="mb-4">
+                        <h5>🛡️ Compliance Features</h5>
+                        <div class="row">
+                            {% for requirement in template.complianceRequirements %}
+                                <div class="col-md-6 mb-2">
+                                    <span class="badge bg-info">{{ requirement }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if template.questionSchema is not empty %}
+                    <div class="mb-4">
+                        <h5>📝 Question Preview</h5>
+                        <div class="border rounded p-3">
+                            {% for question in template.questionSchema|slice(0, 3) %}
+                                <div class="mb-3">
+                                    <label class="form-label"><strong>{{ question.label ?? 'Question ' ~ loop.index }}</strong></label>
+                                    {% if question.type == 'text' %}
+                                        <input type="text" class="form-control" placeholder="Text input" disabled>
+                                    {% elseif question.type == 'textarea' %}
+                                        <textarea class="form-control" placeholder="Long text input" disabled></textarea>
+                                    {% elseif question.type == 'select' %}
+                                        <select class="form-select" disabled>
+                                            <option>Select an option...</option>
+                                            {% if question.options is defined %}
+                                                {% for option in question.options %}
+                                                    <option>{{ option }}</option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            {% if template.questionSchema|length > 3 %}
+                                <p class="text-muted text-center">... and {{ template.questionSchema|length - 3 }} more questions</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="{{ path('app_template_demo_use', {'id': template.id}) }}" 
+                       class="btn btn-success btn-lg">🚀 Use This Template</a>
+                    <a href="{{ path('app_template_demo') }}" 
+                       class="btn btn-outline-secondary">← Back to Marketplace</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+
+        {% if ratings is not empty %}
+            <div class="card">
+                <div class="card-header">
+                    <h5>💬 Recent Reviews</h5>
+                </div>
+                <div class="card-body">
+                    {% for rating in ratings %}
+                        <div class="mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong>{{ rating.user.name }}</strong>
+                                <small class="text-muted">{{ rating.createdAt|date('M j, Y') }}</small>
+                            </div>
+                            <div class="mb-2">
+                                {% for i in 1..5 %}
+                                    {% if i <= rating.rating %}
+                                        <span class="text-warning">★</span>
+                                    {% else %}
+                                        <span class="text-muted">☆</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% if rating.review %}
+                                <p class="text-muted small">{{ rating.review }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
