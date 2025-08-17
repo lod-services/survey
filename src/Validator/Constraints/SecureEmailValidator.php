@@ -31,18 +31,18 @@ class SecureEmailValidator extends ConstraintValidator
 
         // Check for suspicious patterns that could indicate injection attempts
         $suspiciousPatterns = [
-            '/[;<>]/',                          // Command injection characters
-            '/\bscript\b/i',                    // XSS script tags
-            '/\bdrop\s+table\b/i',              // SQL drop commands
-            '/\bunion\s+select\b/i',            // SQL union injection
-            '/\binsert\s+into\b/i',             // SQL insert commands
-            '/\bdelete\s+from\b/i',             // SQL delete commands
-            '/\bupdate\s+.*\bset\b/i',          // SQL update commands
-            '/(\*|%|\?){3,}/',                  // Excessive wildcards
-            '/\.{3,}/',                         // Multiple dots (path traversal)
-            '/\${.*}/',                         // Variable interpolation
-            '/%[0-9a-f]{2}/i',                  // URL encoded characters
-            '/\\\\[nrtx]/',                     // Escape sequences
+            '/[;<>]/',                          // Command injection: semicolon, less-than, greater-than chars
+            '/\bscript\b/i',                    // XSS prevention: detects script tag keywords
+            '/\bdrop\s+table\b/i',              // SQL injection: DROP TABLE statements
+            '/\bunion\s+select\b/i',            // SQL injection: UNION SELECT for data extraction
+            '/\binsert\s+into\b/i',             // SQL injection: INSERT INTO for data manipulation
+            '/\bdelete\s+from\b/i',             // SQL injection: DELETE FROM for data destruction
+            '/\bupdate\s+.*\bset\b/i',          // SQL injection: UPDATE...SET for data modification
+            '/(\*|%|\?){3,}/',                  // Wildcard abuse: 3+ consecutive wildcards indicate fuzzing
+            '/\.{3,}/',                         // Path traversal: multiple dots for directory navigation
+            '/\${.*}/',                         // Template injection: variable interpolation syntax
+            '/%[0-9a-f]{2}/i',                  // URL encoding: percent-encoded chars may hide payloads
+            '/\\\\[nrtx]/',                     // Escape sequences: backslash-escaped chars for injection
         ];
 
         foreach ($suspiciousPatterns as $pattern) {
@@ -60,7 +60,8 @@ class SecureEmailValidator extends ConstraintValidator
             return;
         }
 
-        // Check for excessive length (beyond RFC limits + safety margin)
+        // Check for excessive length - RFC 5321 limits local part to 64 chars and domain to 253 chars
+        // Adding safety margin of ~20 chars gives us 300 bytes total to prevent buffer overflow attacks
         if (strlen($value) > 300) {
             $this->context->buildViolation($constraint->message)
                 ->addViolation();
