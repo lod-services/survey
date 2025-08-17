@@ -11,6 +11,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Validator\Constraints as Assert;
+use App\Validator\Constraints\SecureEmail;
 
 class TestFormController extends AbstractController
 {
@@ -25,6 +27,15 @@ class TestFormController extends AbstractController
             ->add('email', EmailType::class, [
                 'label' => 'Email',
                 'required' => true,
+                'constraints' => [
+                    new Assert\Email([
+                        'message' => 'Please enter a valid email address.',
+                        'mode' => Assert\Email::VALIDATION_MODE_HTML5
+                    ]),
+                    new Assert\Length(['max' => 254]),
+                    new Assert\NotBlank(['message' => 'Email cannot be empty.']),
+                    new SecureEmail()
+                ]
             ])
             ->add('message', TextareaType::class, [
                 'label' => 'Message',
@@ -44,7 +55,7 @@ class TestFormController extends AbstractController
                 $data = $form->getData();
                 $sanitizedData = [
                     'name' => htmlspecialchars($data['name'] ?? '', ENT_QUOTES, 'UTF-8'),
-                    'email' => filter_var($data['email'] ?? '', FILTER_SANITIZE_EMAIL),
+                    'email' => $data['email'] ?? '',
                     'message' => htmlspecialchars($data['message'] ?? '', ENT_QUOTES, 'UTF-8'),
                 ];
                 
