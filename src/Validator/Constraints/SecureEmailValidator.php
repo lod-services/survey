@@ -30,6 +30,7 @@ class SecureEmailValidator extends ConstraintValidator
         }
 
         // Check for suspicious patterns that could indicate injection attempts
+        // Each pattern targets specific attack vectors for comprehensive security
         $suspiciousPatterns = [
             '/[;<>]/',                          // Command injection: semicolon, less-than, greater-than chars
             '/\bscript\b/i',                    // XSS prevention: detects script tag keywords
