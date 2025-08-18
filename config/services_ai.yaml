@@ -1,0 +1,30 @@
+# AI Services Configuration
+services:
+    # AI Service Interface
+    App\Service\AI\AIServiceInterface:
+        alias: App\Service\AI\MockAIService
+
+    # Mock AI Service
+    App\Service\AI\MockAIService:
+        arguments:
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: ai_service }
+
+    # Rate Limiter for AI API calls
+    ai_requests_limiter:
+        class: Symfony\Component\RateLimiter\RateLimiterFactory
+        arguments:
+            - 'ai_requests'
+            - !php/const Symfony\Component\RateLimiter\Policy\SlidingWindowLimiter::class
+            - 60  # 60 requests
+            - !php/const DateInterval::class 'PT1M'  # per minute
+            - '@cache.app'
+
+    # Cache for AI responses
+    ai_response_cache:
+        class: Symfony\Component\Cache\Adapter\FilesystemAdapter
+        arguments:
+            - 'ai_responses'
+            - 3600  # 1 hour TTL
+            - '%kernel.cache_dir%/ai'

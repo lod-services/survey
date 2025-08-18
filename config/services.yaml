@@ -11,3 +11,7 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+# Import AI services configuration
+imports:
+    - { resource: services_ai.yaml }

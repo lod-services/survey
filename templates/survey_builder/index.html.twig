@@ -1,0 +1,587 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .survey-builder {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .question-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+        }
+        .ai-suggestions {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .bias-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .bias-low { background: #d4edda; color: #155724; }
+        .bias-medium { background: #fff3cd; color: #856404; }
+        .bias-high { background: #f8d7da; color: #721c24; }
+        .ai-loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .question-suggestions {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .suggestion-item {
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .suggestion-item:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+        }
+        .prediction-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .prediction-excellent { background: #d4edda; color: #155724; }
+        .prediction-good { background: #fff3cd; color: #856404; }
+        .prediction-poor { background: #f8d7da; color: #721c24; }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="survey-builder">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>{{ title }}</h1>
+                <div>
+                    <button class="btn btn-outline-primary" id="save-survey">Save Draft</button>
+                    <button class="btn btn-success" id="publish-survey">Publish Survey</button>
+                </div>
+            </div>
+
+            <!-- Survey Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Survey Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="survey-title" class="form-label">Survey Title</label>
+                        <input type="text" class="form-control" id="survey-title" placeholder="Enter survey title">
+                    </div>
+                    <div class="mb-3">
+                        <label for="survey-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="survey-description" rows="3" placeholder="Describe your survey"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="survey-topic" class="form-label">Survey Topic (for AI assistance)</label>
+                        <input type="text" class="form-control" id="survey-topic" placeholder="e.g., Employee Satisfaction, Customer Feedback">
+                        <button class="btn btn-primary btn-sm mt-2" id="generate-suggestions">
+                            <i class="fas fa-magic"></i> Generate AI Question Suggestions
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Predictions -->
+            <div class="card mb-4" id="ai-predictions" style="display: none;">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line"></i> AI Predictions</h5>
+                </div>
+                <div class="card-body">
+                    <div id="completion-prediction">
+                        <strong>Predicted Completion Rate:</strong>
+                        <span id="completion-rate">--</span>
+                        <span id="completion-badge" class="prediction-badge">--</span>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted" id="prediction-factors">Estimated time: -- minutes</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Questions</h5>
+                    <button class="btn btn-primary btn-sm" id="add-question">
+                        <i class="fas fa-plus"></i> Add Question
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="questions-container">
+                        <!-- Questions will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- AI Assistant Panel -->
+            <div class="card sticky-top">
+                <div class="card-header">
+                    <h5><i class="fas fa-robot"></i> AI Assistant</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Question Suggestions -->
+                    <div class="ai-suggestions" id="question-suggestions" style="display: none;">
+                        <h6>Suggested Questions</h6>
+                        <div class="question-suggestions" id="suggestions-list">
+                            <!-- AI suggestions will appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Bias Analysis -->
+                    <div class="ai-suggestions" id="bias-analysis" style="display: none;">
+                        <h6>Bias Analysis</h6>
+                        <div id="bias-results">
+                            <!-- Bias analysis results -->
+                        </div>
+                    </div>
+
+                    <!-- Inclusive Language Check -->
+                    <div class="ai-suggestions" id="inclusive-language" style="display: none;">
+                        <h6>Inclusive Language Check</h6>
+                        <div id="language-results">
+                            <!-- Language analysis results -->
+                        </div>
+                    </div>
+
+                    <!-- Help Text -->
+                    <div id="ai-help">
+                        <p class="text-muted mb-2">The AI assistant will help you:</p>
+                        <ul class="text-muted small">
+                            <li>Generate relevant question suggestions</li>
+                            <li>Detect bias in your questions</li>
+                            <li>Check for inclusive language</li>
+                            <li>Predict completion rates</li>
+                            <li>Optimize question flow</li>
+                        </ul>
+                        <p class="text-muted small">Start by entering a survey topic and adding questions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Question Template -->
+<template id="question-template">
+    <div class="question-item" data-question-id="">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="flex-grow-1">
+                <div class="mb-2">
+                    <label class="form-label">Question Text</label>
+                    <div class="d-flex">
+                        <textarea class="form-control question-text" rows="2" placeholder="Enter your question"></textarea>
+                        <button class="btn btn-outline-secondary btn-sm ms-2 analyze-question" title="Analyze with AI">
+                            <i class="fas fa-brain"></i>
+                        </button>
+                    </div>
+                    <div class="bias-indicator-container mt-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Question Type</label>
+                        <select class="form-select question-type">
+                            <option value="text">Text</option>
+                            <option value="scale">Rating Scale</option>
+                            <option value="multiple_choice">Multiple Choice</option>
+                            <option value="checkbox">Checkbox</option>
+                            <option value="dropdown">Dropdown</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mt-4">
+                            <input class="form-check-input question-required" type="checkbox">
+                            <label class="form-check-label">Required</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="ms-3">
+                <button class="btn btn-outline-danger btn-sm delete-question">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        <div class="ai-feedback" style="display: none;">
+            <!-- AI feedback will appear here -->
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Survey Builder JavaScript
+        class SurveyBuilder {
+            constructor() {
+                this.survey = {
+                    id: {{ surveyId ?? 'null' }},
+                    title: '',
+                    description: '',
+                    questions: []
+                };
+                this.questionCounter = 0;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                if (this.survey.id) {
+                    this.loadSurvey();
+                }
+            }
+
+            bindEvents() {
+                document.getElementById('add-question').addEventListener('click', () => this.addQuestion());
+                document.getElementById('generate-suggestions').addEventListener('click', () => this.generateSuggestions());
+                document.getElementById('save-survey').addEventListener('click', () => this.saveSurvey());
+                document.getElementById('publish-survey').addEventListener('click', () => this.publishSurvey());
+                
+                document.getElementById('survey-title').addEventListener('input', (e) => {
+                    this.survey.title = e.target.value;
+                    this.updatePredictions();
+                });
+                
+                document.getElementById('survey-description').addEventListener('input', (e) => {
+                    this.survey.description = e.target.value;
+                });
+            }
+
+            async generateSuggestions() {
+                const topic = document.getElementById('survey-topic').value;
+                if (!topic) {
+                    alert('Please enter a survey topic first');
+                    return;
+                }
+
+                const button = document.getElementById('generate-suggestions');
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+                try {
+                    const response = await fetch('/api/ai/suggest-questions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ topic, surveyType: 'general', questionCount: 5 })
+                    });
+
+                    const data = await response.json();
+                    this.displaySuggestions(data.suggestions);
+                } catch (error) {
+                    console.error('Error generating suggestions:', error);
+                    alert('Failed to generate suggestions. Please try again.');
+                } finally {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fas fa-magic"></i> Generate AI Question Suggestions';
+                }
+            }
+
+            displaySuggestions(suggestions) {
+                const container = document.getElementById('suggestions-list');
+                const panel = document.getElementById('question-suggestions');
+                
+                container.innerHTML = '';
+                suggestions.forEach(suggestion => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.innerHTML = `
+                        <div class="fw-bold">${suggestion.text}</div>
+                        <small class="text-muted">Type: ${suggestion.type} | Confidence: ${(suggestion.confidence * 100).toFixed(0)}%</small>
+                        <div class="mt-1">
+                            <small>${suggestion.rationale}</small>
+                        </div>
+                    `;
+                    item.addEventListener('click', () => this.addQuestionFromSuggestion(suggestion));
+                    container.appendChild(item);
+                });
+                
+                panel.style.display = 'block';
+                document.getElementById('ai-help').style.display = 'none';
+            }
+
+            addQuestionFromSuggestion(suggestion) {
+                const question = this.addQuestion();
+                const questionElement = document.querySelector(`[data-question-id="${question.id}"]`);
+                questionElement.querySelector('.question-text').value = suggestion.text;
+                questionElement.querySelector('.question-type').value = suggestion.type;
+                
+                // Update question data
+                question.text = suggestion.text;
+                question.type = suggestion.type;
+                
+                this.updatePredictions();
+            }
+
+            addQuestion() {
+                const template = document.getElementById('question-template');
+                const clone = template.content.cloneNode(true);
+                const questionId = ++this.questionCounter;
+                
+                const questionElement = clone.querySelector('.question-item');
+                questionElement.setAttribute('data-question-id', questionId);
+                
+                // Bind events
+                const textArea = clone.querySelector('.question-text');
+                const typeSelect = clone.querySelector('.question-type');
+                const requiredCheck = clone.querySelector('.question-required');
+                const deleteBtn = clone.querySelector('.delete-question');
+                const analyzeBtn = clone.querySelector('.analyze-question');
+                
+                textArea.addEventListener('input', (e) => {
+                    this.updateQuestion(questionId, 'text', e.target.value);
+                    this.debounceAnalyze(questionId, e.target.value);
+                });
+                
+                typeSelect.addEventListener('change', (e) => {
+                    this.updateQuestion(questionId, 'type', e.target.value);
+                });
+                
+                requiredCheck.addEventListener('change', (e) => {
+                    this.updateQuestion(questionId, 'required', e.target.checked);
+                });
+                
+                deleteBtn.addEventListener('click', () => this.deleteQuestion(questionId));
+                analyzeBtn.addEventListener('click', () => this.analyzeQuestion(questionId));
+                
+                document.getElementById('questions-container').appendChild(clone);
+                
+                // Add to survey data
+                const question = {
+                    id: questionId,
+                    text: '',
+                    type: 'text',
+                    required: false,
+                    position: this.survey.questions.length + 1
+                };
+                this.survey.questions.push(question);
+                
+                return question;
+            }
+
+            updateQuestion(questionId, field, value) {
+                const question = this.survey.questions.find(q => q.id === questionId);
+                if (question) {
+                    question[field] = value;
+                    this.updatePredictions();
+                }
+            }
+
+            deleteQuestion(questionId) {
+                document.querySelector(`[data-question-id="${questionId}"]`).remove();
+                this.survey.questions = this.survey.questions.filter(q => q.id !== questionId);
+                this.updatePredictions();
+            }
+
+            debounceAnalyze = this.debounce((questionId, text) => {
+                if (text.length > 10) {
+                    this.analyzeQuestion(questionId, text);
+                }
+            }, 2000);
+
+            async analyzeQuestion(questionId, text = null) {
+                const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+                const textArea = questionElement.querySelector('.question-text');
+                const analyzeBtn = questionElement.querySelector('.analyze-question');
+                const biasContainer = questionElement.querySelector('.bias-indicator-container');
+                
+                const questionText = text || textArea.value;
+                if (!questionText.trim()) return;
+                
+                analyzeBtn.disabled = true;
+                analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                try {
+                    // Analyze bias
+                    const biasResponse = await fetch('/api/ai/analyze-bias', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: questionText })
+                    });
+                    const biasData = await biasResponse.json();
+                    
+                    // Analyze inclusive language
+                    const langResponse = await fetch('/api/ai/check-inclusive-language', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: questionText })
+                    });
+                    const langData = await langResponse.json();
+                    
+                    this.displayQuestionAnalysis(questionElement, biasData, langData);
+                } catch (error) {
+                    console.error('Error analyzing question:', error);
+                } finally {
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = '<i class="fas fa-brain"></i>';
+                }
+            }
+
+            displayQuestionAnalysis(questionElement, biasData, langData) {
+                const biasContainer = questionElement.querySelector('.bias-indicator-container');
+                const feedbackContainer = questionElement.querySelector('.ai-feedback');
+                
+                // Update bias indicator
+                const biasLevel = biasData.level;
+                const biasScore = (biasData.biasScore * 100).toFixed(0);
+                biasContainer.innerHTML = `
+                    <span class="bias-indicator bias-${biasLevel}">
+                        Bias: ${biasLevel.toUpperCase()} (${biasScore}%)
+                    </span>
+                `;
+                
+                // Show detailed feedback
+                let feedback = '<h6>AI Analysis Results</h6>';
+                
+                if (biasData.issues.length > 0) {
+                    feedback += '<div class="mb-2"><strong>Bias Issues:</strong><ul>';
+                    biasData.issues.forEach(issue => {
+                        feedback += `<li>${issue.type}: "${issue.phrase}" - ${issue.suggestion}</li>`;
+                    });
+                    feedback += '</ul></div>';
+                }
+                
+                if (langData.flags.length > 0) {
+                    feedback += '<div class="mb-2"><strong>Language Suggestions:</strong><ul>';
+                    langData.flags.forEach(flag => {
+                        feedback += `<li>${flag.category}: "${flag.term}" → ${flag.suggestion}</li>`;
+                    });
+                    feedback += '</ul></div>';
+                }
+                
+                if (biasData.issues.length === 0 && langData.flags.length === 0) {
+                    feedback += '<div class="text-success">✓ Question appears well-written and unbiased</div>';
+                }
+                
+                feedbackContainer.innerHTML = feedback;
+                feedbackContainer.style.display = 'block';
+            }
+
+            async updatePredictions() {
+                if (this.survey.questions.length === 0) {
+                    document.getElementById('ai-predictions').style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/ai/predict-completion-rate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            surveyId: this.survey.id,
+                            questions: this.survey.questions 
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    this.displayPredictions(data);
+                } catch (error) {
+                    console.error('Error updating predictions:', error);
+                }
+            }
+
+            displayPredictions(data) {
+                const panel = document.getElementById('ai-predictions');
+                const rateElement = document.getElementById('completion-rate');
+                const badgeElement = document.getElementById('completion-badge');
+                const factorsElement = document.getElementById('prediction-factors');
+                
+                const rate = (data.predictedCompletionRate * 100).toFixed(1);
+                rateElement.textContent = rate + '%';
+                
+                const badgeClass = rate > 70 ? 'prediction-excellent' : (rate > 50 ? 'prediction-good' : 'prediction-poor');
+                const badgeText = rate > 70 ? 'Excellent' : (rate > 50 ? 'Good' : 'Needs Work');
+                
+                badgeElement.className = `prediction-badge ${badgeClass}`;
+                badgeElement.textContent = badgeText;
+                
+                factorsElement.textContent = `Estimated time: ${data.factors.estimatedTime}`;
+                
+                panel.style.display = 'block';
+            }
+
+            async saveSurvey() {
+                try {
+                    const method = this.survey.id ? 'PUT' : 'POST';
+                    const url = this.survey.id ? `/api/surveys/${this.survey.id}` : '/api/surveys';
+                    
+                    const response = await fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: this.survey.title,
+                            description: this.survey.description
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (!this.survey.id) {
+                        this.survey.id = data.id;
+                    }
+                    
+                    alert('Survey saved successfully!');
+                } catch (error) {
+                    console.error('Error saving survey:', error);
+                    alert('Failed to save survey');
+                }
+            }
+
+            async publishSurvey() {
+                if (!this.survey.title) {
+                    alert('Please add a title to your survey');
+                    return;
+                }
+                
+                if (this.survey.questions.length === 0) {
+                    alert('Please add at least one question');
+                    return;
+                }
+                
+                await this.saveSurvey();
+                // Additional publish logic would go here
+                alert('Survey published successfully!');
+            }
+
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        }
+
+        // Initialize survey builder when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new SurveyBuilder();
+        });
+    </script>
+{% endblock %}
