@@ -36,12 +36,16 @@ class ProductionReadinessCheckCommand extends Command
             $io->error('APP_SECRET environment variable is not set');
             $io->note('Please configure a secure secret (32+ characters) in your environment.');
             $allChecksPass = false;
-        } elseif (strlen($appSecret) < 32) {
-            $io->error('APP_SECRET is too short: ' . strlen($appSecret) . ' characters (minimum: 32)');
+        } elseif (mb_strlen($appSecret) < 32) {
+            $io->error('APP_SECRET is too short: ' . mb_strlen($appSecret) . ' characters (minimum: 32)');
             $io->note('Please generate a stronger secret with at least 32 characters.');
             $allChecksPass = false;
+        } elseif (!$this->validateSecretEntropy($appSecret)) {
+            $io->error('APP_SECRET has insufficient entropy (not enough character variety)');
+            $io->note('Please generate a more random secret with diverse characters.');
+            $allChecksPass = false;
         } else {
-            $io->success('APP_SECRET is properly configured (' . strlen($appSecret) . ' characters)');
+            $io->success('APP_SECRET is properly configured (' . mb_strlen($appSecret) . ' characters, good entropy)');
         }
         
         // Check APP_ENV
@@ -62,5 +66,11 @@ class ProductionReadinessCheckCommand extends Command
             $io->note('Please fix the issues above before deploying to production.');
             return Command::FAILURE;
         }
+    }
+
+    private function validateSecretEntropy(string $secret): bool
+    {
+        // Check for sufficient character variety (at least 16 unique characters)
+        return count(array_unique(str_split($secret))) >= 16;
     }
 }

@@ -23,7 +23,7 @@ class Kernel extends BaseKernel
             return;
         }
 
-        $appSecret = $_ENV['APP_SECRET'] ?? null;
+        $appSecret = $_ENV['APP_SECRET'] ?? '';
         
         if (empty($appSecret)) {
             throw new SecurityConfigurationException(
@@ -32,10 +32,10 @@ class Kernel extends BaseKernel
             );
         }
         
-        if (strlen($appSecret) < 32) {
+        if (mb_strlen($appSecret) < 32) {
             throw new SecurityConfigurationException(
                 'APP_SECRET must be at least 32 characters for security. ' .
-                'Current length: ' . strlen($appSecret) . ' characters. ' .
+                'Current length: ' . mb_strlen($appSecret) . ' characters. ' .
                 'Please generate a stronger secret.'
             );
         }

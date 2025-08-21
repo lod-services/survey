@@ -9,19 +9,19 @@ use PHPUnit\Framework\TestCase;
 class KernelValidationTest extends TestCase
 {
     private array $originalEnv = [];
-
+    
     protected function setUp(): void
     {
-        // Backup original environment variables
+        // Store original environment values
         $this->originalEnv = [
             'APP_SECRET' => $_ENV['APP_SECRET'] ?? null,
-            'FORCE_SECURITY_VALIDATION' => $_ENV['FORCE_SECURITY_VALIDATION'] ?? null
+            'FORCE_SECURITY_VALIDATION' => $_ENV['FORCE_SECURITY_VALIDATION'] ?? null,
         ];
     }
-
+    
     protected function tearDown(): void
     {
-        // Restore original environment variables
+        // Restore original environment values
         foreach ($this->originalEnv as $key => $value) {
             if ($value === null) {
                 unset($_ENV[$key]);
@@ -30,46 +30,53 @@ class KernelValidationTest extends TestCase
             }
         }
     }
-
-    public function testKernelBootSucceedsWithValidAppSecret(): void
+    
+    public function testKernelConstructorSucceedsWithValidAppSecretInProd(): void
     {
         $_ENV['APP_SECRET'] = 'this_is_a_valid_32_character_secret_value';
-        $_ENV['FORCE_SECURITY_VALIDATION'] = 'true';
         
         // This should not throw an exception
         $this->expectNotToPerformAssertions();
-        new Kernel('test', false);
+        new Kernel('prod', false);
     }
     
-    public function testKernelBootFailsWithEmptyAppSecret(): void
+    public function testKernelConstructorSucceedsInDevWithoutValidation(): void
+    {
+        $_ENV['APP_SECRET'] = 'short';
+        
+        // This should not throw an exception in dev environment
+        $this->expectNotToPerformAssertions();
+        new Kernel('dev', false);
+    }
+    
+    public function testKernelConstructorFailsWithEmptyAppSecretInProd(): void
     {
         $_ENV['APP_SECRET'] = '';
-        $_ENV['FORCE_SECURITY_VALIDATION'] = 'true';
         
         $this->expectException(SecurityConfigurationException::class);
         $this->expectExceptionMessage('APP_SECRET environment variable is required but not set');
         
-        new Kernel('test', false);
+        new Kernel('prod', false);
     }
     
-    public function testKernelBootFailsWithShortAppSecret(): void
+    public function testKernelConstructorFailsWithShortAppSecretInProd(): void
     {
         $_ENV['APP_SECRET'] = 'this_is_only_31_characters_long';
+        
+        $this->expectException(SecurityConfigurationException::class);
+        $this->expectExceptionMessage('APP_SECRET must be at least 32 characters for security');
+        
+        new Kernel('prod', false);
+    }
+    
+    public function testKernelConstructorFailsWithForceValidationInDev(): void
+    {
+        $_ENV['APP_SECRET'] = 'short';
         $_ENV['FORCE_SECURITY_VALIDATION'] = 'true';
         
         $this->expectException(SecurityConfigurationException::class);
         $this->expectExceptionMessage('APP_SECRET must be at least 32 characters for security');
         
-        new Kernel('test', false);
-    }
-
-    public function testKernelBootSkipsValidationInDevelopment(): void
-    {
-        $_ENV['APP_SECRET'] = 'short';
-        unset($_ENV['FORCE_SECURITY_VALIDATION']);
-        
-        // This should not throw an exception in development mode
-        $this->expectNotToPerformAssertions();
         new Kernel('dev', false);
     }
 }
