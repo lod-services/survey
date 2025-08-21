@@ -8,12 +8,13 @@ The application implements mandatory environment variable validation during star
 
 #### Implementation Details
 
-**Location**: `src/Kernel.php:19-37`
+**Location**: `src/Kernel.php` - Kernel class constructor
 
-The Kernel class now includes environment validation during the boot process:
+The Kernel class now includes environment validation during application startup:
 
 - **Validates APP_SECRET presence**: Ensures the environment variable is not empty
 - **Enforces minimum length**: Requires at least 32 characters for sufficient entropy
+- **Environment-aware**: Only validates in production or when explicitly forced
 - **Fails fast**: Application refuses to start with invalid configuration
 
 #### Production Readiness Command
@@ -58,9 +59,9 @@ The implementation provides clear error messages:
 #### Security Considerations
 
 - Error messages never expose actual secret values
-- Validation occurs early in application lifecycle
-- Uses Symfony's parameter resolution for consistent behavior
-- Performance optimized (<100ms validation time)
+- Validation occurs very early in application lifecycle (constructor)
+- Uses direct environment variable access for early validation
+- Environment-aware validation improves development experience
 
 ## Deployment Requirements
 

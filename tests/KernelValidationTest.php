@@ -5,83 +5,71 @@ namespace App\Tests;
 use App\Exception\SecurityConfigurationException;
 use App\Kernel;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 class KernelValidationTest extends TestCase
 {
+    private array $originalEnv = [];
+
+    protected function setUp(): void
+    {
+        // Backup original environment variables
+        $this->originalEnv = [
+            'APP_SECRET' => $_ENV['APP_SECRET'] ?? null,
+            'FORCE_SECURITY_VALIDATION' => $_ENV['FORCE_SECURITY_VALIDATION'] ?? null
+        ];
+    }
+
+    protected function tearDown(): void
+    {
+        // Restore original environment variables
+        foreach ($this->originalEnv as $key => $value) {
+            if ($value === null) {
+                unset($_ENV[$key]);
+            } else {
+                $_ENV[$key] = $value;
+            }
+        }
+    }
+
     public function testKernelBootSucceedsWithValidAppSecret(): void
     {
-        $kernel = new Kernel('test', false);
-        
-        // Create a mock container with valid APP_SECRET
-        $container = new ContainerBuilder();
-        $container->setParameterBag(new ParameterBag([
-            'app.secret' => 'this_is_a_valid_32_character_secret_value'
-        ]));
-        
-        // Use reflection to set the container
-        $reflection = new \ReflectionClass($kernel);
-        $containerProperty = $reflection->getProperty('container');
-        $containerProperty->setAccessible(true);
-        $containerProperty->setValue($kernel, $container);
+        $_ENV['APP_SECRET'] = 'this_is_a_valid_32_character_secret_value';
+        $_ENV['FORCE_SECURITY_VALIDATION'] = 'true';
         
         // This should not throw an exception
         $this->expectNotToPerformAssertions();
-        
-        // Use reflection to call validateEnvironment directly
-        $method = $reflection->getMethod('validateEnvironment');
-        $method->setAccessible(true);
-        $method->invoke($kernel);
+        new Kernel('test', false);
     }
     
     public function testKernelBootFailsWithEmptyAppSecret(): void
     {
-        $kernel = new Kernel('test', false);
-        
-        // Create a mock container with empty APP_SECRET
-        $container = new ContainerBuilder();
-        $container->setParameterBag(new ParameterBag([
-            'app.secret' => ''
-        ]));
-        
-        // Use reflection to set the container
-        $reflection = new \ReflectionClass($kernel);
-        $containerProperty = $reflection->getProperty('container');
-        $containerProperty->setAccessible(true);
-        $containerProperty->setValue($kernel, $container);
+        $_ENV['APP_SECRET'] = '';
+        $_ENV['FORCE_SECURITY_VALIDATION'] = 'true';
         
         $this->expectException(SecurityConfigurationException::class);
         $this->expectExceptionMessage('APP_SECRET environment variable is required but not set');
         
-        // Use reflection to call validateEnvironment directly
-        $method = $reflection->getMethod('validateEnvironment');
-        $method->setAccessible(true);
-        $method->invoke($kernel);
+        new Kernel('test', false);
     }
     
     public function testKernelBootFailsWithShortAppSecret(): void
     {
-        $kernel = new Kernel('test', false);
-        
-        // Create a mock container with short APP_SECRET (31 characters)
-        $container = new ContainerBuilder();
-        $container->setParameterBag(new ParameterBag([
-            'app.secret' => 'this_is_only_31_characters_long'
-        ]));
-        
-        // Use reflection to set the container
-        $reflection = new \ReflectionClass($kernel);
-        $containerProperty = $reflection->getProperty('container');
-        $containerProperty->setAccessible(true);
-        $containerProperty->setValue($kernel, $container);
+        $_ENV['APP_SECRET'] = 'this_is_only_31_characters_long';
+        $_ENV['FORCE_SECURITY_VALIDATION'] = 'true';
         
         $this->expectException(SecurityConfigurationException::class);
         $this->expectExceptionMessage('APP_SECRET must be at least 32 characters for security');
         
-        // Use reflection to call validateEnvironment directly
-        $method = $reflection->getMethod('validateEnvironment');
-        $method->setAccessible(true);
-        $method->invoke($kernel);
+        new Kernel('test', false);
+    }
+
+    public function testKernelBootSkipsValidationInDevelopment(): void
+    {
+        $_ENV['APP_SECRET'] = 'short';
+        unset($_ENV['FORCE_SECURITY_VALIDATION']);
+        
+        // This should not throw an exception in development mode
+        $this->expectNotToPerformAssertions();
+        new Kernel('dev', false);
     }
 }

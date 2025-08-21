@@ -10,15 +10,20 @@ class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
 
-    public function boot(): void
+    public function __construct(string $environment, bool $debug)
     {
-        parent::boot();
+        parent::__construct($environment, $debug);
         $this->validateEnvironment();
     }
 
     private function validateEnvironment(): void
     {
-        $appSecret = $this->getContainer()->getParameter('app.secret');
+        // Only validate in production or when explicitly required
+        if ($this->getEnvironment() !== 'prod' && !($_ENV['FORCE_SECURITY_VALIDATION'] ?? false)) {
+            return;
+        }
+
+        $appSecret = $_ENV['APP_SECRET'] ?? null;
         
         if (empty($appSecret)) {
             throw new SecurityConfigurationException(
