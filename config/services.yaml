@@ -1,4 +1,5 @@
 parameters:
+    openai.api_key: '%env(OPENAI_API_KEY)%'
 
 services:
     _defaults:
@@ -11,3 +12,30 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # OpenAI Client Configuration
+    OpenAI\Client:
+        factory: ['OpenAI', 'client']
+        arguments:
+            - '%openai.api_key%'
+
+    # AI Services
+    App\Service\AiQuestionGeneratorService:
+        arguments:
+            $openaiClient: '@OpenAI\Client'
+            $cache: '@cache.app'
+            $logger: '@logger'
+
+    App\Service\AiBiasDetectionService:
+        arguments:
+            $openaiClient: '@OpenAI\Client'
+            $cache: '@cache.app'
+            $logger: '@logger'
+
+    # Survey Controller
+    App\Controller\SurveyController:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $questionGenerator: '@App\Service\AiQuestionGeneratorService'
+            $biasDetector: '@App\Service\AiBiasDetectionService'
+            $logger: '@logger'

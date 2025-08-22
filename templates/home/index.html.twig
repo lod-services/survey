@@ -1,23 +1,25 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Home - Survey Application{% endblock %}
+{% block title %}AI-Powered Survey Builder{% endblock %}
 
 {% block body %}
 <div class="row">
     <div class="col-md-8">
-        <div class="jumbotron bg-primary text-white p-4 rounded">
-            <h1 class="display-4">Welcome to Survey Application</h1>
-            <p class="lead">This is a Symfony application with Bootstrap and Stimulus integration.</p>
+        <div class="jumbotron bg-gradient-primary text-white p-5 rounded">
+            <h1 class="display-4">🧠 AI-Powered Survey Builder</h1>
+            <p class="lead">Create professional, unbiased surveys with intelligent AI assistance that helps you ask the right questions.</p>
             <hr class="my-4">
-            <p>The application includes:</p>
-            <ul>
-                <li>✅ Symfony 7.3 Framework</li>
-                <li>✅ Web Profiler for debugging</li>
-                <li>✅ Twig templating engine</li>
-                <li>✅ Bootstrap 5 for responsive UI</li>
-                <li>✅ Stimulus for interactive JavaScript</li>
-                <li>✅ Webpack Encore for asset management</li>
+            <p>Revolutionary features powered by artificial intelligence:</p>
+            <ul class="mb-4">
+                <li>🎯 <strong>Smart Question Generator:</strong> AI suggests relevant questions based on your objectives</li>
+                <li>🔍 <strong>Real-time Bias Detection:</strong> Identifies and corrects leading or biased questions</li>
+                <li>📊 <strong>Quality Scoring:</strong> Confidence ratings and clarity metrics for every suggestion</li>
+                <li>🚀 <strong>Instant Setup:</strong> Get from idea to professional survey in minutes</li>
+                <li>♿ <strong>Accessibility First:</strong> Ensures inclusive and accessible question design</li>
             </ul>
+            <a href="{{ path('app_survey_index') }}" class="btn btn-light btn-lg">
+                <i class="bi bi-rocket"></i> Start Building Surveys
+            </a>
         </div>
     </div>
     <div class="col-md-4">

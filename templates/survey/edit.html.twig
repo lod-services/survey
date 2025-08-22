@@ -1,0 +1,456 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Survey: {{ survey.title }} - AI Builder{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .ai-suggestion {
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .bias-warning {
+            border-left: 4px solid #dc3545;
+            background-color: #fff3cd;
+        }
+        .question-item {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            transition: all 0.15s ease-in-out;
+        }
+        .question-item:hover {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .confidence-bar {
+            height: 4px;
+            border-radius: 2px;
+        }
+        .loading-spinner {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">📝 {{ survey.title }}</h2>
+                    <div class="btn-group">
+                        <button id="generateAiSuggestions" class="btn btn-outline-primary">
+                            🧠 Get AI Suggestions
+                        </button>
+                        <button id="addQuestionBtn" class="btn btn-primary">
+                            <i class="bi bi-plus"></i> Add Question
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Survey Details Form -->
+                    {{ form_start(form) }}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                {{ form_row(form.title, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_row(form.targetAudience, {'attr': {'class': 'form-control'}}) }}
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            {{ form_row(form.description, {'attr': {'class': 'form-control', 'rows': 2}}) }}
+                        </div>
+                        <div class="mb-4">
+                            {{ form_row(form.objective, {'attr': {'class': 'form-control', 'rows': 2}}) }}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-4">
+                            <a href="{{ path('app_survey_index') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                            {{ form_widget(form.save, {'attr': {'class': 'btn btn-success'}}) }}
+                        </div>
+                    {{ form_end(form) }}
+                    
+                    <hr>
+                    
+                    <!-- Questions Section -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4>Questions</h4>
+                        <span class="badge bg-info">{{ questions|length }} questions</span>
+                    </div>
+                    
+                    <!-- Loading Spinner -->
+                    <div id="loadingSpinner" class="loading-spinner text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">AI is generating suggestions...</p>
+                    </div>
+                    
+                    <!-- Questions List -->
+                    <div id="questionsList" class="mb-4">
+                        {% for question in questions %}
+                            <div class="question-item p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-2">{{ question.text }}</h6>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-secondary me-2">{{ question.type|title }}</span>
+                                            {% if question.isRequired %}
+                                                <span class="badge bg-warning me-2">Required</span>
+                                            {% endif %}
+                                            {% if question.isAiGenerated %}
+                                                <span class="badge bg-primary me-2">🧠 AI Generated</span>
+                                                {% if question.aiConfidenceScore %}
+                                                    <div class="confidence-bar bg-primary me-2" style="width: {{ (question.aiConfidenceScore * 50) }}px;"></div>
+                                                    <small class="text-muted">{{ (question.aiConfidenceScore * 100)|round }}% confidence</small>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                        {% if question.helpText %}
+                                            <small class="text-muted">{{ question.helpText }}</small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-warning bias-check-btn" data-question-text="{{ question.text }}">
+                                            🔍 Check Bias
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteQuestion({{ question.id }})">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Add Question Form -->
+                    <div id="addQuestionForm" class="card mb-4" style="display: none;">
+                        <div class="card-header">
+                            <h6 class="mb-0">Add New Question</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Question Text</label>
+                                <textarea id="questionText" class="form-control" rows="2" placeholder="Enter your question..."></textarea>
+                                <div id="biasWarning" class="alert alert-warning mt-2" style="display: none;">
+                                    <strong>⚠️ Potential Bias Detected:</strong>
+                                    <div id="biasDetails"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Question Type</label>
+                                    <select id="questionType" class="form-select">
+                                        <option value="text">Text Input</option>
+                                        <option value="textarea">Text Area</option>
+                                        <option value="multiple_choice">Multiple Choice</option>
+                                        <option value="scale">Scale (1-10)</option>
+                                        <option value="email">Email</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Required</label>
+                                    <select id="questionRequired" class="form-select">
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button id="saveQuestion" class="btn btn-primary">Save Question</button>
+                                <button id="cancelAddQuestion" class="btn btn-secondary">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Suggestions Sidebar -->
+        <div class="col-md-4">
+            <div class="card sticky-top">
+                <div class="card-header">
+                    <h5 class="mb-0">🧠 AI Suggestions</h5>
+                </div>
+                <div class="card-body">
+                    <div id="aiSuggestions">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-lightbulb display-4"></i>
+                            <p class="mt-2">Click "Get AI Suggestions" to generate smart question recommendations based on your survey objective.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        const surveyId = {{ survey.id }};
+        
+        // Show/hide add question form
+        document.getElementById('addQuestionBtn').addEventListener('click', function() {
+            document.getElementById('addQuestionForm').style.display = 'block';
+            this.style.display = 'none';
+        });
+        
+        document.getElementById('cancelAddQuestion').addEventListener('click', function() {
+            document.getElementById('addQuestionForm').style.display = 'none';
+            document.getElementById('addQuestionBtn').style.display = 'inline-block';
+            clearQuestionForm();
+        });
+        
+        // Real-time bias checking
+        let biasCheckTimeout;
+        document.getElementById('questionText').addEventListener('input', function() {
+            clearTimeout(biasCheckTimeout);
+            const text = this.value.trim();
+            
+            if (text.length > 10) {
+                biasCheckTimeout = setTimeout(() => checkBias(text), 1000);
+            } else {
+                hideBiasWarning();
+            }
+        });
+        
+        // Generate AI suggestions
+        document.getElementById('generateAiSuggestions').addEventListener('click', function() {
+            generateAiSuggestions();
+        });
+        
+        // Save new question
+        document.getElementById('saveQuestion').addEventListener('click', function() {
+            saveNewQuestion();
+        });
+        
+        // Bias check buttons
+        document.querySelectorAll('.bias-check-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const questionText = this.getAttribute('data-question-text');
+                checkBias(questionText, this);
+            });
+        });
+        
+        function generateAiSuggestions() {
+            const btn = document.getElementById('generateAiSuggestions');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+            btn.disabled = true;
+            
+            document.getElementById('loadingSpinner').style.display = 'block';
+            
+            fetch(`/survey/${surveyId}/ai-suggestions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayAiSuggestions(data.suggestions);
+                } else {
+                    showError('Failed to generate AI suggestions: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                showError('Network error: ' + error.message);
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                document.getElementById('loadingSpinner').style.display = 'none';
+            });
+        }
+        
+        function displayAiSuggestions(suggestions) {
+            const container = document.getElementById('aiSuggestions');
+            
+            if (suggestions.length === 0) {
+                container.innerHTML = '<p class="text-muted">No suggestions generated.</p>';
+                return;
+            }
+            
+            let html = '';
+            suggestions.forEach((suggestion, index) => {
+                html += `
+                    <div class="ai-suggestion card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">${suggestion.content}</h6>
+                            <div class="confidence-bar bg-success mb-2" style="width: ${suggestion.confidence * 100}px; height: 4px;"></div>
+                            <small class="text-muted">${Math.round(suggestion.confidence * 100)}% confidence</small>
+                            <p class="card-text mt-2"><small class="text-muted">${suggestion.rationale}</small></p>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-success" onclick="applySuggestion(${suggestion.id}, 'accepted')">
+                                    ✓ Accept
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="applySuggestion(${suggestion.id}, 'rejected')">
+                                    ✗ Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function applySuggestion(suggestionId, action) {
+            fetch(`/survey/suggestions/${suggestionId}/apply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: action })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (action === 'accepted') {
+                        location.reload(); // Refresh to show new question
+                    } else {
+                        // Remove suggestion from UI
+                        event.target.closest('.ai-suggestion').remove();
+                    }
+                } else {
+                    showError('Failed to apply suggestion');
+                }
+            })
+            .catch(error => {
+                showError('Network error: ' + error.message);
+            });
+        }
+        
+        function checkBias(questionText, buttonElement = null) {
+            if (buttonElement) {
+                const originalText = buttonElement.innerHTML;
+                buttonElement.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                buttonElement.disabled = true;
+            }
+            
+            fetch(`/survey/${surveyId}/bias-check`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: questionText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.analysis.bias_detected) {
+                    showBiasWarning(data.analysis);
+                } else {
+                    hideBiasWarning();
+                }
+            })
+            .catch(error => {
+                console.error('Bias check failed:', error);
+            })
+            .finally(() => {
+                if (buttonElement) {
+                    buttonElement.innerHTML = '🔍 Check Bias';
+                    buttonElement.disabled = false;
+                }
+            });
+        }
+        
+        function showBiasWarning(analysis) {
+            const warning = document.getElementById('biasWarning');
+            const details = document.getElementById('biasDetails');
+            
+            let html = `<p>Confidence: ${Math.round(analysis.confidence * 100)}%</p>`;
+            if (analysis.issues && analysis.issues.length > 0) {
+                html += '<ul>';
+                analysis.issues.forEach(issue => {
+                    html += `<li>${issue.description}</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            if (analysis.suggestions && analysis.suggestions.length > 0) {
+                html += '<strong>Suggestions:</strong><ul>';
+                analysis.suggestions.forEach(suggestion => {
+                    html += `<li>${suggestion.improved_text} - ${suggestion.rationale}</li>`;
+                });
+                html += '</ul>';
+            }
+            
+            details.innerHTML = html;
+            warning.style.display = 'block';
+        }
+        
+        function hideBiasWarning() {
+            document.getElementById('biasWarning').style.display = 'none';
+        }
+        
+        function saveNewQuestion() {
+            const text = document.getElementById('questionText').value.trim();
+            const type = document.getElementById('questionType').value;
+            const required = document.getElementById('questionRequired').value === 'true';
+            
+            if (!text) {
+                showError('Question text is required');
+                return;
+            }
+            
+            const btn = document.getElementById('saveQuestion');
+            btn.disabled = true;
+            btn.innerHTML = 'Saving...';
+            
+            fetch(`/survey/${surveyId}/questions/new`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text,
+                    type: type,
+                    required: required
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Refresh to show new question
+                } else {
+                    showError('Failed to save question: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                showError('Network error: ' + error.message);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Question';
+            });
+        }
+        
+        function clearQuestionForm() {
+            document.getElementById('questionText').value = '';
+            document.getElementById('questionType').value = 'text';
+            document.getElementById('questionRequired').value = 'true';
+            hideBiasWarning();
+        }
+        
+        function showError(message) {
+            // Simple error display - could be enhanced with toast notifications
+            alert('Error: ' + message);
+        }
+        
+        function deleteQuestion(questionId) {
+            if (confirm('Are you sure you want to delete this question?')) {
+                // Implementation would go here
+                console.log('Delete question', questionId);
+            }
+        }
+    </script>
+{% endblock %}
