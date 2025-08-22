@@ -3,6 +3,14 @@
 /.env.local
 /.env.local.php
 /.env.*.local
+# Exclude environment files that may contain secrets
+/.env.dev
+/.env.test
+/.env.prod
+# Keep the template files for reference
+!/.env.dev.example
+!/.env.test.example
+!/.env.prod.example
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
