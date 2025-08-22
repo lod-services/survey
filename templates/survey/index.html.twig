@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Survey Builder - AI-Powered{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>🧠 AI-Powered Survey Builder</h1>
+                <a href="{{ path('app_survey_new') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create New Survey
+                </a>
+            </div>
+
+            {% if surveys is empty %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-clipboard-data display-1 text-muted"></i>
+                    </div>
+                    <h3 class="text-muted">No surveys yet</h3>
+                    <p class="text-muted">Create your first AI-powered survey to get started!</p>
+                    <a href="{{ path('app_survey_new') }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle"></i> Create Your First Survey
+                    </a>
+                </div>
+            {% else %}
+                <div class="row">
+                    {% for survey in surveys %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ survey.title }}</h5>
+                                    {% if survey.description %}
+                                        <p class="card-text text-muted">{{ survey.description|slice(0, 100) }}{% if survey.description|length > 100 %}...{% endif %}</p>
+                                    {% endif %}
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <i class="bi bi-question-circle"></i> {{ survey.questions|length }} questions
+                                        </small>
+                                        {% if survey.isPublished %}
+                                            <span class="badge bg-success ms-2">Published</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary ms-2">Draft</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if survey.objective %}
+                                        <div class="mb-3">
+                                            <small class="text-muted">
+                                                <strong>Objective:</strong> {{ survey.objective|slice(0, 80) }}{% if survey.objective|length > 80 %}...{% endif %}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="card-footer bg-transparent">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            Updated {{ survey.updatedAt|date('M j, Y') }}
+                                        </small>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ path('app_survey_edit', {id: survey.id}) }}" class="btn btn-outline-primary">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
