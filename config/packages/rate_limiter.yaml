@@ -1,0 +1,7 @@
+# Temporarily disabled rate limiter for initial testing
+# framework:
+#     rate_limiter:
+#         csp_report:
+#             policy: 'fixed_window'
+#             limit: 100
+#             interval: '1 hour'

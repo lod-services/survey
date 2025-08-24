@@ -1,4 +1,28 @@
 parameters:
+    # CSP Policy configurations
+    csp.production_policy:
+        default-src: "'self'"
+        script-src: "'self'"
+        style-src: "'self' 'unsafe-inline'"
+        img-src: "'self' data:"
+        font-src: "'self'"
+        connect-src: "'self'"
+        object-src: "'none'"
+        base-uri: "'self'"
+        form-action: "'self'"
+        report-uri: "/api/csp-report"
+
+    csp.development_policy:
+        default-src: "'self'"
+        script-src: "'self' 'unsafe-eval' 'unsafe-inline'"
+        style-src: "'self' 'unsafe-inline'"
+        img-src: "'self' data:"
+        font-src: "'self'"
+        connect-src: "'self'"
+        object-src: "'none'"
+        base-uri: "'self'"
+        form-action: "'self'"
+        report-uri: "/api/csp-report"
 
 services:
     _defaults:
@@ -11,3 +35,16 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # CSP Header Event Listener
+    App\EventListener\CspHeaderListener:
+        arguments:
+            $productionPolicy: '%csp.production_policy%'
+            $developmentPolicy: '%csp.development_policy%'
+        tags:
+            - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse }
+
+    # CSP Report Controller with rate limiting (optional dependency)
+    App\Controller\CspReportController:
+        arguments:
+            $rateLimiterFactory: '@?limiter.csp_report'

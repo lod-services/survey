@@ -1,0 +1,4 @@
+framework:
+    lock:
+        default:
+            - flock
