@@ -1,19 +1,82 @@
 framework:
     cache:
         # Unique name of your app: used to compute stable namespaces for cache keys.
-        #prefix_seed: your_vendor_name/app_name
+        prefix_seed: survey_app
 
-        # The "app" cache stores to the filesystem by default.
-        # The data in this cache should persist between deploys.
-        # Other options include:
+        # Multi-level cache with fallback strategy
+        app: cache.adapter.chain
+        
+        pools:
+            # Primary Redis cache with circuit breaker pattern
+            cache.redis:
+                adapter: cache.adapter.redis
+                provider: 'redis://localhost:6379'
+                default_lifetime: 3600
+                
+            # Secondary Memcached cache as fallback
+            cache.memcached:
+                adapter: cache.adapter.memcached
+                provider: 'memcached://localhost:11211'
+                default_lifetime: 3600
+                
+            # File cache as final fallback
+            cache.filesystem:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 3600
+                
+            # Chain adapter for multi-level caching
+            cache.adapter.chain:
+                adapters:
+                    - cache.redis
+                    - cache.memcached
+                    - cache.filesystem
+                    
+            # Survey-specific cache pools
+            survey.cache:
+                adapter: cache.redis
+                default_lifetime: 1800  # 30 minutes
+                
+            response.cache:
+                adapter: cache.redis
+                default_lifetime: 900   # 15 minutes
+                
+            user.session.cache:
+                adapter: cache.redis
+                default_lifetime: 7200  # 2 hours
+                
+            # System cache for doctrine queries
+            doctrine.result_cache_pool:
+                adapter: cache.redis
+                default_lifetime: 3600
+                
+            doctrine.system_cache_pool:
+                adapter: cache.redis
+                default_lifetime: 86400  # 24 hours
 
-        # Redis
-        #app: cache.adapter.redis
-        #default_redis_provider: redis://localhost
+when@dev:
+    framework:
+        cache:
+            app: cache.adapter.filesystem
+            pools:
+                cache.redis:
+                    adapter: cache.adapter.filesystem
+                survey.cache:
+                    adapter: cache.adapter.filesystem
+                response.cache:
+                    adapter: cache.adapter.filesystem
+                user.session.cache:
+                    adapter: cache.adapter.filesystem
 
-        # APCu (not recommended with heavy random-write workloads as memory fragmentation can cause perf issues)
-        #app: cache.adapter.apcu
-
-        # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+when@test:
+    framework:
+        cache:
+            app: cache.adapter.array
+            pools:
+                cache.redis:
+                    adapter: cache.adapter.array
+                survey.cache:
+                    adapter: cache.adapter.array
+                response.cache:
+                    adapter: cache.adapter.array
+                user.session.cache:
+                    adapter: cache.adapter.array

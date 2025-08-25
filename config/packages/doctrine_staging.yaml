@@ -1,0 +1,44 @@
+# Staging Doctrine Configuration
+
+doctrine:
+    dbal:
+        url: '%env(resolve:DATABASE_URL)%'
+        server_version: '16'
+        charset: utf8
+        
+        # SSL Configuration for staging
+        options:
+            !php/const PDO::MYSQL_ATTR_SSL_CA: '%env(DATABASE_SSL_CA)%'
+            !php/const PDO::MYSQL_ATTR_SSL_CERT: '%env(DATABASE_SSL_CERT)%'
+            !php/const PDO::MYSQL_ATTR_SSL_KEY: '%env(DATABASE_SSL_KEY)%'
+            !php/const PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT: true
+            
+        # Moderate logging for staging
+        logging: true
+        profiling: '%kernel.debug%'
+        profiling_collect_backtrace: '%kernel.debug%'
+        use_savepoints: true
+
+    orm:
+        auto_generate_proxy_classes: false
+        proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
+        
+        # Staging cache settings
+        query_cache_driver:
+            type: pool
+            pool: doctrine.system_cache_pool
+            
+        result_cache_driver:
+            type: pool
+            pool: doctrine.result_cache_pool
+
+framework:
+    cache:
+        pools:
+            doctrine.result_cache_pool:
+                adapter: cache.redis
+                default_lifetime: 1800
+                
+            doctrine.system_cache_pool:
+                adapter: cache.redis
+                default_lifetime: 43200
