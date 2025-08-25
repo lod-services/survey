@@ -1,0 +1,92 @@
+# Production Doctrine Configuration with SSL and Performance Optimization
+
+doctrine:
+    dbal:
+        # SSL Configuration for PostgreSQL
+        url: '%env(resolve:DATABASE_URL)%'
+        server_version: '16'
+        charset: utf8
+        
+        # SSL Options for production security
+        options:
+            !php/const PDO::MYSQL_ATTR_SSL_CA: '%env(DATABASE_SSL_CA)%'
+            !php/const PDO::MYSQL_ATTR_SSL_CERT: '%env(DATABASE_SSL_CERT)%'
+            !php/const PDO::MYSQL_ATTR_SSL_KEY: '%env(DATABASE_SSL_KEY)%'
+            !php/const PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT: false
+            
+        # Connection pooling and performance
+        connections:
+            default:
+                url: '%env(resolve:DATABASE_URL)%'
+                server_version: '16'
+                charset: utf8
+                profiling_collect_backtrace: false
+                use_savepoints: true
+                
+                # Connection pool settings
+                options:
+                    !php/const PDO::ATTR_PERSISTENT: true
+                    !php/const PDO::ATTR_TIMEOUT: 30
+                    
+            # Read replica for read-heavy operations
+            replica:
+                url: '%env(resolve:DATABASE_REPLICA_URL)%'
+                server_version: '16'
+                charset: utf8
+                replica_for: default
+                
+        # Query logging disabled in production
+        logging: false
+        profiling: false
+        profiling_collect_backtrace: false
+
+    orm:
+        auto_generate_proxy_classes: false
+        proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
+        
+        # Production query cache settings
+        query_cache_driver:
+            type: pool
+            pool: doctrine.system_cache_pool
+            
+        result_cache_driver:
+            type: pool
+            pool: doctrine.result_cache_pool
+            
+        metadata_cache_driver:
+            type: pool
+            pool: doctrine.system_cache_pool
+            
+        # Optimize entity mappings for production
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+        auto_mapping: true
+        
+        # Enable second level cache for better performance
+        second_level_cache:
+            enabled: true
+            default_lifetime: 3600
+            log_enabled: false
+            
+            regions:
+                survey_region:
+                    cache_driver:
+                        type: pool
+                        pool: survey.cache
+                    lifetime: 1800
+                    
+                response_region:
+                    cache_driver:
+                        type: pool
+                        pool: response.cache
+                    lifetime: 900
+
+framework:
+    cache:
+        pools:
+            doctrine.result_cache_pool:
+                adapter: cache.redis
+                default_lifetime: 3600
+                
+            doctrine.system_cache_pool:
+                adapter: cache.redis
+                default_lifetime: 86400

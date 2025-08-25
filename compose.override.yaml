@@ -1,0 +1,22 @@
+
+services:
+###> doctrine/doctrine-bundle ###
+  database:
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: survey_dev
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: dev_password
+###< doctrine/doctrine-bundle ###
+
+  redis:
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker/redis/dev.conf:/usr/local/etc/redis/redis.conf
+
+  memcached:
+    ports:
+      - "11211:11211"
+    command: memcached -m 64m -vv  # Verbose mode for development
