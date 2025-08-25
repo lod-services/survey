@@ -28,6 +28,7 @@ framework:
             cache.adapter.chain:
                 adapters:
                     - cache.redis
+                    - cache.memcached
                     - cache.filesystem
                     
             # Survey-specific cache pools

@@ -19,6 +19,14 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
+    # Security headers configuration
+    headers:
+        frame_options: 'DENY'
+        content_type: true
+        content_security_policy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+        strict_transport_security: "max-age=31536000; includeSubDomains"
+        referrer_policy: 'strict-origin-when-cross-origin'
+
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
