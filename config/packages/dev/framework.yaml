@@ -1,0 +1,5 @@
+# Development-specific framework configuration
+framework:
+    session:
+        cookie_secure: auto  # Auto-detect HTTPS in development
+        gc_maxlifetime: 3600  # 1 hour for development (longer timeout for convenience)

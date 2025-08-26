@@ -1,0 +1,7 @@
+# Production-specific framework configuration
+framework:
+    session:
+        cookie_secure: true  # Force HTTPS cookies in production
+        gc_maxlifetime: 1800  # 30 minutes for regular sessions
+        # Enable session.cookie_lifetime for 'remember me' functionality
+        cookie_lifetime: 0  # Session cookie (expires on browser close)

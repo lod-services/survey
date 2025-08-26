@@ -11,3 +11,8 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # Security Headers EventSubscriber with environment injection
+    App\EventSubscriber\SecurityHeadersSubscriber:
+        arguments:
+            $environment: '%kernel.environment%'
