@@ -24,32 +24,33 @@ class ApplicationTest extends WebTestCase
         
         $response = $client->getResponse();
         
-        // Test Content Security Policy header is present
-        $this->assertTrue($response->headers->has('Content-Security-Policy'));
+        // Content Security Policy
+        $this->assertTrue($response->headers->has('Content-Security-Policy'), 'CSP header should be present');
         $csp = $response->headers->get('Content-Security-Policy');
-        $this->assertStringContainsString('default-src', $csp);
+        $this->assertStringContainsString('default-src', $csp, 'CSP should contain default-src');
+        $this->assertStringContainsString('nonce-', $csp, 'CSP should contain nonce');
         
-        // Test X-Frame-Options header
-        $this->assertTrue($response->headers->has('X-Frame-Options'));
-        $this->assertEquals('DENY', $response->headers->get('X-Frame-Options'));
+        // X-Frame-Options
+        $this->assertTrue($response->headers->has('X-Frame-Options'), 'X-Frame-Options header should be present');
+        $this->assertEquals('DENY', $response->headers->get('X-Frame-Options'), 'X-Frame-Options should be DENY');
         
-        // Test X-Content-Type-Options header
-        $this->assertTrue($response->headers->has('X-Content-Type-Options'));
-        $this->assertEquals('nosniff', $response->headers->get('X-Content-Type-Options'));
+        // X-Content-Type-Options
+        $this->assertTrue($response->headers->has('X-Content-Type-Options'), 'X-Content-Type-Options header should be present');
+        $this->assertEquals('nosniff', $response->headers->get('X-Content-Type-Options'), 'X-Content-Type-Options should be nosniff');
         
-        // Test Referrer-Policy header
-        $this->assertTrue($response->headers->has('Referrer-Policy'));
-        $this->assertEquals('strict-origin-when-cross-origin', $response->headers->get('Referrer-Policy'));
+        // X-XSS-Protection (should be disabled/0)
+        $this->assertTrue($response->headers->has('X-XSS-Protection'), 'X-XSS-Protection header should be present');
+        $this->assertEquals('0', $response->headers->get('X-XSS-Protection'), 'X-XSS-Protection should be disabled');
         
-        // Test Permissions-Policy header
-        $this->assertTrue($response->headers->has('Permissions-Policy'));
+        // Referrer-Policy
+        $this->assertTrue($response->headers->has('Referrer-Policy'), 'Referrer-Policy header should be present');
+        $this->assertEquals('strict-origin-when-cross-origin', $response->headers->get('Referrer-Policy'), 'Referrer-Policy should be strict-origin-when-cross-origin');
+        
+        // Permissions-Policy
+        $this->assertTrue($response->headers->has('Permissions-Policy'), 'Permissions-Policy header should be present');
         $permissionsPolicy = $response->headers->get('Permissions-Policy');
-        $this->assertStringContainsString('camera=()', $permissionsPolicy);
-        $this->assertStringContainsString('microphone=()', $permissionsPolicy);
-        $this->assertStringContainsString('geolocation=()', $permissionsPolicy);
-        
-        // Test X-XSS-Protection header (should be disabled/0)
-        $this->assertTrue($response->headers->has('X-XSS-Protection'));
-        $this->assertEquals('0', $response->headers->get('X-XSS-Protection'));
+        $this->assertStringContainsString('camera=()', $permissionsPolicy, 'Permissions-Policy should restrict camera');
+        $this->assertStringContainsString('microphone=()', $permissionsPolicy, 'Permissions-Policy should restrict microphone');
+        $this->assertStringContainsString('geolocation=()', $permissionsPolicy, 'Permissions-Policy should restrict geolocation');
     }
 }
