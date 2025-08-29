@@ -1,43 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Survey Application{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>📊</text></svg>">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}Survey Gamification{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🎮</text></svg>">
+        
         {% block stylesheets %}
             {{ encore_entry_link_tags('app') }}
-        {% endblock %}
-
-        {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
+        <style>
+            .achievement-badge {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                margin-right: 10px;
+            }
+            .achievement-unlocked {
+                background: linear-gradient(45deg, #ffd700, #ffed4e);
+                border: 2px solid #ffd700;
+            }
+            .achievement-locked {
+                background: #e9ecef;
+                border: 2px solid #ced4da;
+                opacity: 0.6;
+            }
+            .points-badge {
+                background: linear-gradient(45deg, #007bff, #0056b3);
+                color: white;
+                border-radius: 20px;
+                padding: 5px 15px;
+                font-weight: bold;
+            }
+            .streak-indicator {
+                color: #ff6b6b;
+                font-weight: bold;
+            }
+            .navbar-brand {
+                font-weight: bold;
+            }
+        </style>
         {% endblock %}
     </head>
     <body>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href="/">📊 Survey Application</a>
+                <a class="navbar-brand" href="{{ path('app_home') }}">
+                    🎮 Survey Gamification
+                </a>
+                
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" href="/">Home</a>
+                            <a class="nav-link" href="{{ path('app_survey_list') }}">
+                                📋 Surveys
+                            </a>
                         </li>
+                        {% if app.user %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_gamification_dashboard') }}">
+                                📊 Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_gamification_leaderboard') }}">
+                                🏆 Leaderboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_gamification_achievements') }}">
+                                🏅 Achievements
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <ul class="navbar-nav">
+                        {% if app.user %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <span class="points-badge me-2">{{ app.user.totalPoints }} pts</span>
+                                👤 {{ app.user.name }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ path('app_gamification_profile') }}">
+                                    👤 Profile
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ path('app_logout') }}">
+                                    🚪 Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_login') }}">
+                                🔑 Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_register') }}">
+                                ➕ Register
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
         </nav>
 
         <main class="container mt-4">
+            {% for type, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ type == 'error' ? 'danger' : type }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            
             {% block body %}{% endblock %}
         </main>
 
-        <footer class="bg-light mt-5 py-3">
+        <footer class="bg-light text-center py-4 mt-5">
             <div class="container">
-                <p class="text-center text-muted">&copy; 2025 Survey Application. Built with Symfony, Bootstrap, and Stimulus.</p>
+                <p class="text-muted mb-0">
+                    🏆 Survey Gamification System - Making surveys fun and engaging!
+                </p>
             </div>
         </footer>
+
+        {% block javascripts %}
+            {{ encore_entry_script_tags('app') }}
+        {% endblock %}
     </body>
 </html>

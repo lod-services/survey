@@ -1,91 +1,143 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Home - Survey Application{% endblock %}
+{% block title %}Survey Gamification - Home{% endblock %}
 
 {% block body %}
+<div class="hero-section bg-primary text-white py-5 mb-5 rounded">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-4 fw-bold">🎮 Survey Gamification System</h1>
+            <p class="lead">Transform boring surveys into engaging experiences with achievements, points, and leaderboards!</p>
+            {% if not app.user %}
+            <div class="mt-4">
+                <a href="{{ path('app_register') }}" class="btn btn-light btn-lg me-3">
+                    ➕ Get Started
+                </a>
+                <a href="{{ path('app_login') }}" class="btn btn-outline-light btn-lg">
+                    🔑 Login
+                </a>
+            </div>
+            {% else %}
+            <div class="mt-4">
+                <a href="{{ path('app_survey_list') }}" class="btn btn-light btn-lg me-3">
+                    📋 Take Surveys
+                </a>
+                <a href="{{ path('app_gamification_dashboard') }}" class="btn btn-outline-light btn-lg">
+                    📊 View Dashboard
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="display-1">🏆</div>
+            <p class="mt-3">Earn achievements and climb the leaderboard!</p>
+        </div>
+    </div>
+</div>
+
 <div class="row">
-    <div class="col-md-8">
-        <div class="jumbotron bg-primary text-white p-4 rounded">
-            <h1 class="display-4">Welcome to Survey Application</h1>
-            <p class="lead">This is a Symfony application with Bootstrap and Stimulus integration.</p>
-            <hr class="my-4">
-            <p>The application includes:</p>
-            <ul>
-                <li>✅ Symfony 7.3 Framework</li>
-                <li>✅ Web Profiler for debugging</li>
-                <li>✅ Twig templating engine</li>
-                <li>✅ Bootstrap 5 for responsive UI</li>
-                <li>✅ Stimulus for interactive JavaScript</li>
-                <li>✅ Webpack Encore for asset management</li>
-            </ul>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5>Test Stimulus Controller</h5>
-            </div>
-            <div class="card-body" data-controller="hello">
-                <div class="mb-3">
-                    <label for="name" class="form-label">Your Name:</label>
-                    <input type="text" id="name" class="form-control" data-hello-target="name" placeholder="Enter your name">
-                </div>
-                <button type="button" class="btn btn-primary" data-action="click->hello#greet">Say Hello</button>
-                <div class="mt-3">
-                    <div data-hello-target="output" class="alert alert-success" style="display: none;"></div>
-                </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="display-4 text-primary mb-3">🏅</div>
+                <h5 class="card-title">Earn Achievements</h5>
+                <p class="card-text">
+                    Unlock badges and achievements by completing surveys, maintaining streaks, and providing quality responses.
+                </p>
             </div>
         </div>
     </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Bootstrap Components Test</h5>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="display-4 text-success mb-3">⭐</div>
+                <h5 class="card-title">Collect Points</h5>
+                <p class="card-text">
+                    Earn points for survey completion, quality responses, and consistent participation. Higher quality = more points!
+                </p>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="alert alert-info" role="alert">
-                            <h6 class="alert-heading">Information</h6>
-                            This is a Bootstrap alert component.
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-primary">Button 1</button>
-                            <button type="button" class="btn btn-outline-primary">Button 2</button>
-                            <button type="button" class="btn btn-outline-primary">Button 3</button>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: 75%"></div>
-                        </div>
-                    </div>
-                </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="display-4 text-warning mb-3">🏆</div>
+                <h5 class="card-title">Compete & Win</h5>
+                <p class="card-text">
+                    Climb the leaderboard, maintain streaks, and compete with other participants for the top spots.
+                </p>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
+{% if app.user %}
+<div class="row mt-5">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>Development Information</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Environment:</strong> {{ app.environment }}</p>
-                <p><strong>Debug Mode:</strong> {{ app.debug ? 'Enabled' : 'Disabled' }}</p>
-                <p><strong>Controller:</strong> {{ controller_name }}</p>
-                {% if app.debug %}
-                    <div class="alert alert-warning">
-                        <strong>Web Profiler:</strong> Check the bottom of the page for the profiler toolbar.
+        <h3>🎯 Your Quick Stats</h3>
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ app.user.totalPoints }}</h4>
+                        <p class="mb-0">Total Points</p>
                     </div>
-                {% endif %}
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ app.user.surveyResponses|filter(r => r.completed)|length }}</h4>
+                        <p class="mb-0">Surveys Completed</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ app.user.achievements|length }}</h4>
+                        <p class="mb-0">Achievements</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h4>{{ app.user.streak ? app.user.streak.currentStreak : 0 }}</h4>
+                        <p class="mb-0">Current Streak</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-5">
+    <div class="col-12 text-center">
+        <h3>🚀 How It Works</h3>
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="mb-3">1️⃣</div>
+                <h5>Register & Login</h5>
+                <p>Create your account to start earning points and achievements</p>
+            </div>
+            <div class="col-md-3">
+                <div class="mb-3">2️⃣</div>
+                <h5>Take Surveys</h5>
+                <p>Complete surveys thoughtfully to maximize your point rewards</p>
+            </div>
+            <div class="col-md-3">
+                <div class="mb-3">3️⃣</div>
+                <h5>Earn Rewards</h5>
+                <p>Unlock achievements and climb the leaderboard</p>
+            </div>
+            <div class="col-md-3">
+                <div class="mb-3">4️⃣</div>
+                <h5>Stay Engaged</h5>
+                <p>Maintain streaks and compete with other participants</p>
             </div>
         </div>
     </div>

@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Surveys - Survey Gamification{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>📋 Available Surveys</h1>
+    {% if app.user %}
+        <div class="text-end">
+            <span class="badge bg-primary fs-6">{{ app.user.totalPoints }} points</span>
+        </div>
+    {% endif %}
+</div>
+
+{% if surveys is empty %}
+    <div class="text-center py-5">
+        <div class="display-1 text-muted">📊</div>
+        <h3 class="text-muted">No surveys available</h3>
+        <p class="lead text-muted">Check back later for new surveys to complete!</p>
+    </div>
+{% else %}
+    <div class="row">
+        {% for survey in surveys %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 {{ survey.gamificationEnabled ? 'border-primary' : '' }}">
+                    {% if survey.gamificationEnabled %}
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <small class="mb-0">🎮 Gamified Survey</small>
+                            <span class="badge bg-light text-primary">{{ survey.basePoints }}+ pts</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ survey.title }}</h5>
+                        {% if survey.description %}
+                            <p class="card-text">{{ survey.description|u.truncate(100, '...') }}</p>
+                        {% endif %}
+                        
+                        <div class="small text-muted mb-3">
+                            {% if survey.startsAt %}
+                                <div>📅 Starts: {{ survey.startsAt|date('M j, Y') }}</div>
+                            {% endif %}
+                            {% if survey.endsAt %}
+                                <div>⏰ Ends: {{ survey.endsAt|date('M j, Y') }}</div>
+                            {% endif %}
+                            {% if survey.minimumTimeSeconds %}
+                                <div>⏱️ Minimum time: {{ (survey.minimumTimeSeconds / 60)|round }} minutes</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ path('app_survey_show', {id: survey.id}) }}" class="btn btn-outline-primary">
+                                View Details
+                            </a>
+                            {% if app.user %}
+                                <a href="{{ path('app_survey_take', {id: survey.id}) }}" class="btn btn-primary">
+                                    Start Survey
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if not app.user %}
+    <div class="alert alert-info mt-4">
+        <h5 class="alert-heading">🔑 Login Required</h5>
+        <p class="mb-2">You need to be logged in to take surveys and earn points!</p>
+        <a href="{{ path('app_login') }}" class="btn btn-primary">Login</a>
+        <a href="{{ path('app_register') }}" class="btn btn-outline-primary">Register</a>
+    </div>
+{% endif %}
+{% endblock %}
