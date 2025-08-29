@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard - Survey Gamification{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>📊 Welcome back, {{ user.name }}!</h1>
+        <p class="text-muted mb-0">Here's your gamification progress</p>
+    </div>
+    <div class="text-end">
+        <div class="h3 mb-0 text-primary">{{ user.totalPoints }} points</div>
+        <small class="text-muted">Rank #{{ userRank }}</small>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <div class="display-4">🏆</div>
+                <h4>{{ user.totalPoints }}</h4>
+                <p class="mb-0">Total Points</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <div class="display-4">🏅</div>
+                <h4>{{ achievements|length }}</h4>
+                <p class="mb-0">Achievements</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <div class="display-4">🔥</div>
+                <h4>{{ streak ? streak.currentStreak : 0 }}</h4>
+                <p class="mb-0">Current Streak</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <div class="display-4">#</div>
+                <h4>{{ userRank }}</h4>
+                <p class="mb-0">Your Rank</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📈 Recent Points History</h5>
+            </div>
+            <div class="card-body">
+                {% if pointsHistory is empty %}
+                    <div class="text-center py-4 text-muted">
+                        <div class="h4">📊</div>
+                        <p>No points earned yet. Complete your first survey to get started!</p>
+                        <a href="{{ path('app_survey_list') }}" class="btn btn-primary">Browse Surveys</a>
+                    </div>
+                {% else %}
+                    <div class="list-group list-group-flush">
+                        {% for point in pointsHistory|slice(0, 10) %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ point.reason|title }}</strong>
+                                    {% if point.context %}
+                                        <br><small class="text-muted">{{ point.context }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary rounded-pill">+{{ point.points }}</span>
+                                    <br><small class="text-muted">{{ point.createdAt|date('M j, g:i A') }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">🏅 Recent Achievements</h5>
+            </div>
+            <div class="card-body">
+                {% if recentAchievements is empty %}
+                    <div class="text-center py-3 text-muted">
+                        <div class="h4">🎯</div>
+                        <p class="mb-0">No achievements unlocked yet!</p>
+                        <small>Complete surveys to earn your first badges</small>
+                    </div>
+                {% else %}
+                    {% for userAchievement in recentAchievements %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="achievement-badge achievement-unlocked">
+                                {{ userAchievement.achievement.icon }}
+                            </div>
+                            <div>
+                                <strong>{{ userAchievement.achievement.name }}</strong>
+                                <br><small class="text-muted">+{{ userAchievement.pointsAwarded }} points</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <div class="text-center mt-3">
+                    <a href="{{ path('app_gamification_achievements') }}" class="btn btn-outline-primary btn-sm">
+                        View All Achievements
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
