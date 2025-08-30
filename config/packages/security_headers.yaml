@@ -1,0 +1,35 @@
+parameters:
+    # Security Headers Configuration
+    # These headers protect against common web vulnerabilities
+    
+    security_headers.enabled: true
+    
+    # Content Security Policy - Prevents XSS attacks
+    # Optimized for Bootstrap 5.3.7 + Stimulus 3.2.2 compatibility
+    security_headers.content_security_policy: >-
+        default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data:;
+        font-src 'self';
+        connect-src 'self';
+        frame-ancestors 'none';
+        base-uri 'self';
+        form-action 'self';
+    
+    # X-Frame-Options - Prevents clickjacking attacks
+    security_headers.frame_options: 'DENY'
+    
+    # X-Content-Type-Options - Prevents MIME type sniffing attacks  
+    security_headers.content_type_options: 'nosniff'
+    
+    # Strict-Transport-Security - Enforces HTTPS (production only)
+    # Max-age: 1 year, include subdomains, enable preload list
+    security_headers.strict_transport_security: 'max-age=31536000; includeSubDomains; preload'
+    
+    # Referrer-Policy - Controls referrer information disclosure
+    security_headers.referrer_policy: 'strict-origin-when-cross-origin'
+    
+    # Permissions-Policy - Controls browser feature access
+    security_headers.permissions_policy: 'camera=(), microphone=(), geolocation=(), payment=()'
+

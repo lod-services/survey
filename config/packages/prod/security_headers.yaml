@@ -1,0 +1,24 @@
+parameters:
+    # Production Environment Security Headers Configuration  
+    # Strict security policies for production deployment
+    
+    # Production-specific CSP with stricter policies
+    # TODO: Gradually eliminate 'unsafe-inline' directives over time
+    security_headers.content_security_policy: >-
+        default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data:;
+        font-src 'self';
+        connect-src 'self';
+        frame-ancestors 'none';
+        base-uri 'self';
+        form-action 'self';
+        upgrade-insecure-requests;
+    
+    # Strict HSTS for production (1 year, include subdomains, preload)
+    security_headers.strict_transport_security: 'max-age=31536000; includeSubDomains; preload'
+    
+    # Strict frame options for production
+    security_headers.frame_options: 'DENY'
+
