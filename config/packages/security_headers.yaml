@@ -32,3 +32,4 @@ parameters:
     
     # Permissions-Policy - Controls browser feature access
     security_headers.permissions_policy: 'camera=(), microphone=(), geolocation=(), payment=()'
+

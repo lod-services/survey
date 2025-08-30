@@ -20,3 +20,4 @@ parameters:
     
     # Allow framing in development for debugging tools
     security_headers.frame_options: 'SAMEORIGIN'
+

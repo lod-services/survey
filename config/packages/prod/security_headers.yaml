@@ -21,3 +21,4 @@ parameters:
     
     # Strict frame options for production
     security_headers.frame_options: 'DENY'
+
