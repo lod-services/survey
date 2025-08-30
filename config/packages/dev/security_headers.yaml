@@ -1,0 +1,22 @@
+parameters:
+    # Development Environment Security Headers Configuration
+    # More relaxed policies for development and debugging
+    
+    # Disable HSTS in development (HTTPS may not be available)
+    security_headers.strict_transport_security: null
+    
+    # More permissive CSP for development debugging
+    # Allows unsafe-eval for better development experience
+    security_headers.content_security_policy: >-
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data: http: https:;
+        font-src 'self' data:;
+        connect-src 'self' ws: wss:;
+        frame-ancestors 'none';
+        base-uri 'self';
+        form-action 'self';
+    
+    # Allow framing in development for debugging tools
+    security_headers.frame_options: 'SAMEORIGIN'
