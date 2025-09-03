@@ -1,3 +1,6 @@
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+
 parameters:
     level: 5
     paths:
@@ -6,6 +9,6 @@ parameters:
     excludePaths:
         - var/
         - vendor/
+    checkMissingIterableValueType: false
     symfony:
         container_xml_path: var/cache/dev/App_KernelDevDebugContainer.xml
-    checkMissingIterableValueType: false
